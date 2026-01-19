@@ -1,0 +1,7 @@
+.netrwhist
+undo/
+site/
+backups/
+lazy-lock.json
+*.swp
+node_modules/
