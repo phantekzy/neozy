@@ -454,13 +454,23 @@ map("n", "<leader>4", ":4ToggleTerm<CR>", { silent = true, desc = "Terminal 4" }
 local function smart_run()
 	local bufnr = vim.api.nvim_get_current_buf()
 	local filename = vim.api.nvim_buf_get_name(bufnr)
+	local buftype = vim.bo.buftype
+
+	--  Don't do anything if we are in a terminal, tree, or special window
+	if buftype ~= "" then
+		return
+	end
 
 	if filename == "" then
 		vim.notify("Please phantekzy, open a file!", vim.log.levels.WARN, { title = "System" })
 		return
 	end
 
-	vim.cmd("w") -- Save
+	-- 2. Only save if the buffer has been modified and is a normal file
+	if vim.bo.modified then
+		vim.cmd("w")
+	end
+
 	local ft = vim.bo.filetype
 	local cmd = ""
 
@@ -485,7 +495,7 @@ local function smart_run()
 			cmd = [[clear && echo "--- PHANTEKZY GRADLE RUN ---" && echo "" && ./gradlew run]]
 		else
 			-- Fallback for single .java files
-			cmd = [[clear && echo "--- PHANTEKZY JAVA RUN ---" && echo "" && java %:p]]
+			cmd = [[clear && echo "--- PHANTEKZY JAVA RUN ---" && echo "" && java %]]
 		end
 	end
 
@@ -518,3 +528,4 @@ map("n", "[d", vim.diagnostic.goto_prev, { desc = "Prev diagnostic" })
 map("n", "]d", vim.diagnostic.goto_next, { desc = "Next diagnostic" })
 map("n", "<leader>ld", vim.diagnostic.open_float, { desc = "Show diagnostic" })
 map("n", "<leader>lq", vim.diagnostic.setloclist, { desc = "Diagnostics to loclist" })
+
