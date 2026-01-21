@@ -1,4 +1,4 @@
--- Phantekzy Neovim Config  for Windows (2026)
+-- Phantekzy Neovim Config for Windows (2026)
 -- JavaScript / TypeScript / React / PHP / Web Stack
 
 -- Leader keys
@@ -245,15 +245,17 @@ require("lazy").setup({
 				map("n", "<leader>rn", vim.lsp.buf.rename)
 			end
 
-			-- PHP
+			-- Fixed for Neovim 0.11 Deprecation
 			vim.lsp.config("intelephense", {
 				capabilities = capabilities,
 				on_attach = on_attach,
 				settings = { intelephense = { telemetry = { enabled = false } } },
 			})
+			vim.lsp.enable("intelephense")
 
 			for _, s in ipairs({ "html", "cssls", "jsonls", "lua_ls", "ts_ls", "eslint", "tailwindcss" }) do
 				vim.lsp.config(s, { capabilities = capabilities, on_attach = on_attach })
+				vim.lsp.enable(s)
 			end
 		end,
 	},
@@ -432,10 +434,16 @@ map("n", "<M-w>", function()
 	vim.opt.linebreak = vim.opt.wrap:get()
 end, { desc = "Toggle word wrap" })
 
--- SMART RUN (F5)
+-- SMART RUN (F5) - Added buftype check to stop E382
 local function smart_run()
 	local bufnr = vim.api.nvim_get_current_buf()
 	local filename = vim.api.nvim_buf_get_name(bufnr)
+	local buftype = vim.bo.buftype
+
+	-- Stop E382 by only running on actual files (not Neo-tree or Terminals)
+	if buftype ~= "" then
+		return
+	end
 
 	if filename == "" then
 		vim.notify("Please phantekzy, open a file!", vim.log.levels.WARN, { title = "System" })
@@ -475,4 +483,3 @@ vim.api.nvim_set_hl(0, "DiagnosticUnderlineInfo", { undercurl = true, sp = "#87d
 map("n", "[d", vim.diagnostic.goto_prev, { desc = "Prev diagnostic" })
 map("n", "]d", vim.diagnostic.goto_next, { desc = "Next diagnostic" })
 map("n", "<leader>ld", vim.diagnostic.open_float, { desc = "Show diagnostic" })
-map("n", "<leader>lq", vim.diagnostic.setloclist, { desc = "Diagnostics to loclist" })
