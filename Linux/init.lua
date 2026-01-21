@@ -1,4 +1,4 @@
--- Phantekzy Neovim Config (2026)
+-- Phantekzy Neovim Config Linux (2026)
 -- JavaScript / TypeScript / React / PHP / Web Stack/C/RUST/JAVA
 
 -- Leader keys
@@ -59,12 +59,8 @@ require("lazy").setup({
 				terminal_mappings = true,
 				persist_size = true,
 				close_on_exit = false,
-				float_opts = {
-					border = "curved",
-					winblend = 0,
-				},
+				float_opts = { border = "curved", winblend = 0 },
 			})
-			-- Force the floating terminal window to be black
 			vim.api.nvim_set_hl(0, "NormalFloat", { bg = "#000000" })
 			vim.api.nvim_set_hl(0, "FloatBorder", { bg = "#000000", fg = "#ffffff" })
 		end,
@@ -175,16 +171,12 @@ require("lazy").setup({
 		end,
 	},
 
-	-- Telescope UI-Select (Beautifies Code Actions)
+	-- Telescope UI-Select
 	{
 		"nvim-telescope/telescope-ui-select.nvim",
 		config = function()
 			require("telescope").setup({
-				extensions = {
-					["ui-select"] = {
-						require("telescope.themes").get_dropdown({}),
-					},
-				},
+				extensions = { ["ui-select"] = { require("telescope.themes").get_dropdown({}) } },
 			})
 			require("telescope").load_extension("ui-select")
 		end,
@@ -239,9 +231,32 @@ require("lazy").setup({
 	},
 	{
 		"neovim/nvim-lspconfig",
-		dependencies = { "williamboman/mason-lspconfig.nvim", "hrsh7th/cmp-nvim-lsp" },
+		dependencies = { "williamboman/mason-lspconfig.nvim", "hrsh7th/cmp-nvim-lsp", "pmizio/typescript-tools.nvim" },
 		config = function()
 			local capabilities = require("cmp_nvim_lsp").default_capabilities()
+
+			local on_attach = function(_, bufnr)
+				local map = function(mode, lhs, rhs)
+					vim.keymap.set(mode, lhs, rhs, { buffer = bufnr, silent = true })
+				end
+
+				-- SMOOTH JUMP (Like Ctrl+Click)
+				map("n", "gd", function()
+					local ft = vim.bo.filetype
+					if ft:match("typescript") or ft:match("javascript") then
+						vim.cmd("TSToolsGoToSourceDefinition")
+					else
+						vim.lsp.buf.definition()
+					end
+					-- Only center the screen, don't touch Neotree
+					vim.cmd("normal! zz")
+				end)
+
+				map("n", "K", vim.lsp.buf.hover)
+				map("n", "<leader>ca", vim.lsp.buf.code_action)
+				map("n", "<leader>rn", vim.lsp.buf.rename)
+			end
+
 			require("mason-lspconfig").setup({
 				ensure_installed = {
 					"intelephense",
@@ -255,16 +270,6 @@ require("lazy").setup({
 				},
 			})
 
-			local on_attach = function(_, bufnr)
-				local map = function(mode, lhs, rhs)
-					vim.keymap.set(mode, lhs, rhs, { buffer = bufnr, silent = true })
-				end
-				map("n", "gd", vim.lsp.buf.definition)
-				map("n", "K", vim.lsp.buf.hover)
-				map("n", "<leader>ca", vim.lsp.buf.code_action)
-				map("n", "<leader>rn", vim.lsp.buf.rename)
-			end
-
 			-- PHP
 			vim.lsp.config("intelephense", {
 				capabilities = capabilities,
@@ -273,22 +278,17 @@ require("lazy").setup({
 			})
 			vim.lsp.enable("intelephense")
 
-			-- OTHER LANGUAGES
-			for _, s in ipairs({ "html", "cssls", "jsonls", "lua_ls", "rust_analyzer", "jdtls", "clangd" }) do
+			-- OTHER LANGUAGES (C, Rust, Java, etc.)
+			local servers = { "html", "cssls", "jsonls", "lua_ls", "rust_analyzer", "jdtls", "clangd" }
+			for _, s in ipairs(servers) do
 				vim.lsp.config(s, { capabilities = capabilities, on_attach = on_attach })
 				vim.lsp.enable(s)
 			end
-		end,
-	},
 
-	-- TypeScript / JavaScript
-	{
-		"pmizio/typescript-tools.nvim",
-		ft = { "javascript", "typescript", "typescriptreact", "javascriptreact" },
-		dependencies = { "nvim-lua/plenary.nvim" },
-		config = function()
+			-- TYPESCRIPT / JAVASCRIPT
 			require("typescript-tools").setup({
-				capabilities = require("cmp_nvim_lsp").default_capabilities(),
+				on_attach = on_attach,
+				capabilities = capabilities,
 				settings = {
 					tsserver_file_preferences = {
 						includeCompletionsForImportStatements = true,
@@ -299,7 +299,7 @@ require("lazy").setup({
 		end,
 	},
 
-	-- Completion ( FRIENDLY-SNIPPETS)
+	-- Completion
 	{
 		"hrsh7th/nvim-cmp",
 		event = "InsertEnter",
@@ -333,20 +333,9 @@ require("lazy").setup({
 					["<Tab>"] = cmp.mapping.select_next_item(),
 					["<S-Tab>"] = cmp.mapping.select_prev_item(),
 				},
-				sources = {
-					{ name = "nvim_lsp" },
-					{ name = "luasnip" },
-					{ name = "buffer" },
-					{ name = "path" },
-				},
-				window = {
-					completion = cmp.config.window.bordered(),
-					documentation = cmp.config.window.bordered(),
-				},
-				completion = {
-					autocomplete = false,
-					completeopt = "menu,menuone,noinsert",
-				},
+				sources = { { name = "nvim_lsp" }, { name = "luasnip" }, { name = "buffer" }, { name = "path" } },
+				window = { completion = cmp.config.window.bordered(), documentation = cmp.config.window.bordered() },
+				completion = { autocomplete = false, completeopt = "menu,menuone,noinsert" },
 				experimental = { ghost_text = true },
 			})
 		end,
@@ -372,7 +361,7 @@ require("lazy").setup({
 			})
 			vim.keymap.set("n", "<leader>f", function()
 				require("conform").format({ async = true })
-			end, { desc = "Format file" })
+			end)
 		end,
 	},
 
@@ -381,7 +370,6 @@ require("lazy").setup({
 		"smoka7/multicursors.nvim",
 		event = "VeryLazy",
 		dependencies = { "nvim-treesitter/nvim-treesitter", "nvimtools/hydra.nvim" },
-		opts = {},
 		keys = {
 			{
 				"<C-d>",
@@ -389,7 +377,6 @@ require("lazy").setup({
 					require("multicursors").start()
 				end,
 				mode = { "n", "v" },
-				desc = "Start multi-cursor editing",
 			},
 		},
 	},
@@ -403,10 +390,7 @@ require("lazy").setup({
 			require("tokyonight").setup({
 				style = "night",
 				transparent = true,
-				styles = {
-					sidebars = "transparent",
-					floats = "transparent",
-				},
+				styles = { sidebars = "transparent", floats = "transparent" },
 			})
 			vim.cmd([[colorscheme tokyonight]])
 		end,
@@ -415,7 +399,7 @@ require("lazy").setup({
 
 -- Transparency
 local function transparent()
-	for _, g in ipairs({
+	local groups = {
 		"Normal",
 		"NormalNC",
 		"SignColumn",
@@ -426,7 +410,8 @@ local function transparent()
 		"CursorLineNr",
 		"BufferLineFill",
 		"BufferLineBackground",
-	}) do
+	}
+	for _, g in ipairs(groups) do
 		pcall(vim.api.nvim_set_hl, 0, g, { fg = "#bfbfbf", bg = "NONE" })
 	end
 	vim.api.nvim_set_hl(0, "Visual", { bg = "#333333", fg = "#ffffff" })
@@ -444,36 +429,29 @@ map("n", "<leader>fg", ":Telescope live_grep<CR>", { silent = true })
 map("n", "<leader>fb", ":Telescope buffers<CR>", { silent = true })
 map("n", "<leader>fh", ":Telescope help_tags<CR>", { silent = true })
 
--- MULTI-TERMINAL KEYMAPS (Leader + 1-4)
-map("n", "<leader>1", ":1ToggleTerm<CR>", { silent = true, desc = "Terminal 1" })
-map("n", "<leader>2", ":2ToggleTerm<CR>", { silent = true, desc = "Terminal 2" })
-map("n", "<leader>3", ":3ToggleTerm<CR>", { silent = true, desc = "Terminal 3" })
-map("n", "<leader>4", ":4ToggleTerm<CR>", { silent = true, desc = "Terminal 4" })
+-- Terminals
+map("n", "<leader>1", ":1ToggleTerm<CR>", { silent = true })
+map("n", "<leader>2", ":2ToggleTerm<CR>", { silent = true })
+map("n", "<leader>3", ":3ToggleTerm<CR>", { silent = true })
+map("n", "<leader>4", ":4ToggleTerm<CR>", { silent = true })
 
---  SMART RUN (F5) - Supports: C, PHP, RUST (Cargo/rustc), JAVA (Maven/Gradle/java)
+-- SMART RUN (F5)
 local function smart_run()
 	local bufnr = vim.api.nvim_get_current_buf()
 	local filename = vim.api.nvim_buf_get_name(bufnr)
-	local buftype = vim.bo.buftype
-
-	--  Don't do anything if we are in a terminal, tree, or special window
-	if buftype ~= "" then
+	if vim.bo.buftype ~= "" then
 		return
 	end
-
 	if filename == "" then
 		vim.notify("Please phantekzy, open a file!", vim.log.levels.WARN, { title = "System" })
 		return
 	end
-
-	-- 2. Only save if the buffer has been modified and is a normal file
 	if vim.bo.modified then
 		vim.cmd("w")
 	end
 
 	local ft = vim.bo.filetype
 	local cmd = ""
-
 	if ft == "c" then
 		cmd = [[clear && echo "--- PHANTEKZY COMPILING C ---" && echo "" && gcc %:p -o %:t:r -lm && ./%:t:r]]
 	elseif ft == "php" then
@@ -485,16 +463,11 @@ local function smart_run()
 			cmd = [[clear && echo "--- PHANTEKZY RUSTC RUN ---" && echo "" && rustc %:p -o %:t:r && ./%:t:r]]
 		end
 	elseif ft == "java" then
-		-- Check for Maven or Gradle wrappers
-		local is_maven = vim.fn.findfile("mvnw", ".;") ~= ""
-		local is_gradle = vim.fn.findfile("gradlew", ".;") ~= ""
-
-		if is_maven then
+		if vim.fn.findfile("mvnw", ".;") ~= "" then
 			cmd = [[clear && echo "--- PHANTEKZY MAVEN RUN ---" && echo "" && ./mvnw spring-boot:run]]
-		elseif is_gradle then
+		elseif vim.fn.findfile("gradlew", ".;") ~= "" then
 			cmd = [[clear && echo "--- PHANTEKZY GRADLE RUN ---" && echo "" && ./gradlew run]]
 		else
-			-- Fallback for single .java files
 			cmd = [[clear && echo "--- PHANTEKZY JAVA RUN ---" && echo "" && java %]]
 		end
 	end
@@ -505,27 +478,13 @@ local function smart_run()
 		vim.cmd("ToggleTerm direction=float")
 	end
 end
-
--- Map F5
-vim.keymap.set("n", "<F5>", smart_run, { silent = true, desc = "Run or Open Terminal" })
-
--- TERMINAL ESCAPE
-vim.keymap.set("t", "<esc>", [[<C-\><C-n>]], { desc = "Exit terminal mode" })
+map("n", "<F5>", smart_run, { silent = true })
+map("t", "<esc>", [[<C-\><C-n>]])
 
 -- Diagnostics
-vim.diagnostic.config({
-	virtual_text = { prefix = "●", spacing = 2 },
-	signs = true,
-	underline = true,
-	update_in_insert = false,
-})
+vim.diagnostic.config({ virtual_text = { prefix = "●", spacing = 2 }, signs = true, underline = true })
 vim.api.nvim_set_hl(0, "DiagnosticUnderlineError", { undercurl = true, sp = "#ff5f5f" })
-vim.api.nvim_set_hl(0, "DiagnosticUnderlineWarn", { undercurl = true, sp = "#ffaa00" })
-vim.api.nvim_set_hl(0, "DiagnosticUnderlineHint", { undercurl = true, sp = "#5fd7ff" })
-vim.api.nvim_set_hl(0, "DiagnosticUnderlineInfo", { undercurl = true, sp = "#87d7ff" })
-
-map("n", "[d", vim.diagnostic.goto_prev, { desc = "Prev diagnostic" })
-map("n", "]d", vim.diagnostic.goto_next, { desc = "Next diagnostic" })
-map("n", "<leader>ld", vim.diagnostic.open_float, { desc = "Show diagnostic" })
-map("n", "<leader>lq", vim.diagnostic.setloclist, { desc = "Diagnostics to loclist" })
-
+map("n", "[d", vim.diagnostic.goto_prev)
+map("n", "]d", vim.diagnostic.goto_next)
+map("n", "<leader>ld", vim.diagnostic.open_float)
+map("n", "<leader>lq", vim.diagnostic.setloclist)
