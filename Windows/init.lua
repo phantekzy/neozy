@@ -1,5 +1,5 @@
 -- Phantekzy Neovim Config for Windows (2026)
--- JavaScript / TypeScript / React / PHP / Web Stack / JAVA
+-- JavaScript / TypeScript / React / PHP / Web Stack
 
 -- Leader keys
 vim.g.mapleader = " "
@@ -43,7 +43,7 @@ opt.listchars = { space = "·", tab = "→ " }
 require("lazy").setup({
 
 	-- Core dependencies
-	{ "nvim-lua/plenary.nvim", lazy = true },
+	{ "nvim-lua/plenary.nvim", lazy = false },
 	{ "nvim-tree/nvim-web-devicons", lazy = true },
 
 	-- TOGGLETERM
@@ -56,6 +56,9 @@ require("lazy").setup({
 				open_mapping = [[<C-\>]],
 				direction = "float",
 				shade_terminals = false,
+				on_open = function(term)
+					vim.api.nvim_buf_set_name(term.bufnr, "Phantekzy " .. term.id)
+				end,
 				start_in_insert = true,
 				insert_mappings = true,
 				terminal_mappings = true,
@@ -85,25 +88,33 @@ require("lazy").setup({
 		end,
 	},
 
-	-- Status line (ADVANCED PROGRAMMER VERSION - ONLY SECTION MODIFIED)
+	-- Solid Linux-Style Status Line (Modern 2026 API - Minimalist Icon Style)
 	{
 		"nvim-lualine/lualine.nvim",
 		event = "VimEnter",
 		config = function()
+			-- Your exact Linux color palette
 			local mode_color = {
-				n = { fg = "#00afff" },
-				i = { fg = "#00ff00" },
-				v = { fg = "#bb00ff" },
-				c = { fg = "#ffaa00" },
-				R = { fg = "#ff0000" },
+				n = { fg = "#00afff", bg = "#16161e" },
+				i = { fg = "#00ff00", bg = "#16161e" },
+				v = { fg = "#bb00ff", bg = "#16161e" },
+				c = { fg = "#ffaa00", bg = "#16161e" },
+				R = { fg = "#ff0000", bg = "#16161e" },
 			}
+
 			require("lualine").setup({
 				options = {
 					globalstatus = true,
-					theme = "tokyonight",
-					component_separators = { left = "", right = "" },
-					section_separators = { left = "", right = "" },
-					disabled_filetypes = { statusline = { "neo-tree", "toggleterm" } },
+					section_separators = "",
+					component_separators = { left = "｜", right = "｜" },
+					theme = {
+						normal = {
+							a = { bg = "#16161e", fg = "#ffffff" },
+							b = { bg = "#16161e", fg = "#ffffff" },
+							c = { bg = "#16161e", fg = "#ffffff" },
+						},
+					},
+					disabled_filetypes = { statusline = { "neo-tree" } },
 				},
 				sections = {
 					lualine_a = {
@@ -113,58 +124,54 @@ require("lazy").setup({
 								return " " .. m
 							end,
 							color = function()
-								return {
-									fg = (mode_color[vim.fn.mode()] or { fg = "#ffffff" }).fg,
-									bg = "NONE",
-									gui = "bold",
-								}
+								return mode_color[vim.fn.mode()] or { fg = "#ffffff", bg = "#16161e" }
 							end,
 						},
 					},
 					lualine_b = {
-						{ "branch", icon = "" },
-						{ "diff", symbols = { added = " ", modified = " ", removed = " " } },
+						{ "branch", icon = "", color = { fg = "#888888", bg = "#16161e" } },
+						{
+							"diff",
+							symbols = { added = " ", modified = " ", removed = " " },
+							color = { bg = "#16161e" },
+						},
 					},
 					lualine_c = {
 						{
-							function()
-								return "󰉖 " .. vim.fn.fnamemodify(vim.fn.getcwd(), ":t")
-							end,
-							color = { fg = "#565f89", gui = "italic" },
-						},
-						{
 							"filename",
 							file_status = true,
-							path = 1, -- Shows folder/file.js (Essential for Web Dev)
+							path = 0, -- Buffer name only
 							symbols = { modified = " ●", readonly = " " },
+							color = { fg = "#ffffff", bg = "#16161e", gui = "bold" },
 						},
 					},
 					lualine_x = {
-						{ "diagnostics", symbols = { error = " ", warn = " ", info = " ", hint = "󰛨 " } },
+						-- Diagnostics stay essential
 						{
-							function()
-								local clients = vim.lsp.get_active_clients({ bufnr = 0 })
-								if #clients == 0 then
-									return "󰚦 No LSP"
-								end
-								local names = {}
-								for _, client in ipairs(clients) do
-									if client.name ~= "tsserver" then
-										table.insert(names, client.name)
-									end
-								end
-								return "󰄭 " .. table.concat(names, "|")
-							end,
-							color = { fg = "#00afff", gui = "bold" },
+							"diagnostics",
+							symbols = { error = " ", warn = " ", info = " ", hint = "󰛨 " },
+							color = { bg = "#16161e" },
 						},
+						-- BETTER: Only show the language ICON, no text to save space
+						{
+							"filetype",
+							icon_only = true,
+							separator = "",
+							padding = { left = 1, right = 0 },
+							color = { bg = "#16161e" },
+						},
+						-- Encoding is usually redundant, removed text but kept icons for clarity
+						{ "encoding", color = { fg = "#888888", bg = "#16161e" } },
 					},
-					lualine_y = { "filetype", "progress" },
+					lualine_y = {
+						{ "progress", color = { fg = "#888888", bg = "#16161e" } },
+					},
 					lualine_z = {
-						{ "location", icon = "" },
 						{
 							function()
 								return " " .. os.date("%R")
 							end,
+							color = { fg = "#4fd6be", bg = "#16161e", gui = "bold" },
 						},
 					},
 				},
@@ -235,7 +242,7 @@ require("lazy").setup({
 		event = { "BufReadPre", "BufNewFile" },
 		config = function()
 			require("nvim-treesitter.configs").setup({
-				ensure_installed = { "lua", "javascript", "typescript", "tsx", "html", "css", "json", "php", "java" },
+				ensure_installed = { "lua", "javascript", "typescript", "tsx", "html", "css", "json", "php" },
 				highlight = { enable = true },
 				indent = { enable = true },
 				auto_install = true,
@@ -243,14 +250,14 @@ require("lazy").setup({
 		end,
 	},
 
-	-- Mason + LSP (Fixed for Neovim 0.11 & No Conflicts)
+	-- Mason + LSP
 	{ "williamboman/mason.nvim", config = true },
 	{ "williamboman/mason-lspconfig.nvim" },
 	{
 		"WhoIsSethDaniel/mason-tool-installer.nvim",
 		config = function()
 			require("mason-tool-installer").setup({
-				ensure_installed = { "intelephense", "prettierd", "ts_ls", "jdtls", "google-java-format" },
+				ensure_installed = { "intelephense", "prettierd", "ts_ls" },
 				auto_update = true,
 				run_on_start = true,
 			})
@@ -266,8 +273,6 @@ require("lazy").setup({
 				local map = function(mode, lhs, rhs)
 					vim.keymap.set(mode, lhs, rhs, { buffer = bufnr, silent = true })
 				end
-
-				-- SMOOTH JUMP
 				map("n", "gd", function()
 					local ft = vim.bo.filetype
 					if ft:match("typescript") or ft:match("javascript") then
@@ -277,18 +282,16 @@ require("lazy").setup({
 					end
 					vim.cmd("normal! zz")
 				end)
-
 				map("n", "K", vim.lsp.buf.hover)
 				map("n", "<leader>ca", vim.lsp.buf.code_action)
 				map("n", "<leader>rn", vim.lsp.buf.rename)
 			end
 
 			require("mason-lspconfig").setup({
-				ensure_installed = { "intelephense", "lua_ls", "ts_ls", "html", "cssls", "jsonls", "jdtls" },
+				ensure_installed = { "intelephense", "lua_ls", "ts_ls", "html", "cssls", "jsonls" },
 			})
 
-			-- Neovim 0.11 style enable (Excluding ts_ls to avoid the duplicate bug)
-			local servers = { "html", "cssls", "jsonls", "lua_ls", "jdtls", "eslint", "tailwindcss", "intelephense" }
+			local servers = { "html", "cssls", "jsonls", "lua_ls", "eslint", "tailwindcss", "intelephense" }
 			for _, s in ipairs(servers) do
 				vim.lsp.config(s, { capabilities = capabilities, on_attach = on_attach })
 				vim.lsp.enable(s)
@@ -300,8 +303,9 @@ require("lazy").setup({
 				settings = {
 					tsserver_file_preferences = {
 						includeCompletionsForImportStatements = true,
-						importModuleSpecifierPreference = "non-relative",
 						includeCompletionsForModuleExports = true,
+						importModuleSpecifierPreference = "non-relative",
+						includePackageJsonAutoImports = "all",
 					},
 				},
 			})
@@ -332,21 +336,18 @@ require("lazy").setup({
 				},
 				mapping = cmp.mapping.preset.insert({
 					["<CR>"] = cmp.mapping.confirm({ select = true }),
-
-					-- Manually trigger completion
 					["<C-Space>"] = cmp.mapping.complete(),
-					["<C-l>"] = cmp.mapping.complete(), -- Reliable backup for Windows/Alacritty
-
 					["<Tab>"] = cmp.mapping.select_next_item(),
 					["<S-Tab>"] = cmp.mapping.select_prev_item(),
-
-					-- Scroll documentation
-					["<C-b>"] = cmp.mapping.scroll_docs(-4),
-					["<C-f>"] = cmp.mapping.scroll_docs(4),
 				}),
-				sources = { { name = "nvim_lsp" }, { name = "luasnip" }, { name = "buffer" }, { name = "path" } },
+				sources = {
+					{ name = "nvim_lsp", priority = 1000 },
+					{ name = "luasnip", priority = 750 },
+					{ name = "buffer", priority = 500 },
+					{ name = "path", priority = 250 },
+				},
 				window = { completion = cmp.config.window.bordered(), documentation = cmp.config.window.bordered() },
-				completion = { autocomplete = false, completeopt = "menu,menuone,noinsert" },
+				completion = { autocomplete = { cmp.TriggerEvent.TextChanged }, completeopt = "menu,menuone,noinsert" },
 				experimental = { ghost_text = true },
 			})
 		end,
@@ -364,13 +365,12 @@ require("lazy").setup({
 					html = { "prettierd" },
 					css = { "prettierd" },
 					json = { "prettierd" },
-					java = { "google-java-format" },
 				},
 				format_on_save = { lsp_fallback = true, timeout_ms = 500 },
 			})
 			vim.keymap.set("n", "<leader>f", function()
 				require("conform").format({ async = true })
-			end, { desc = "Format file" })
+			end)
 		end,
 	},
 
@@ -386,7 +386,6 @@ require("lazy").setup({
 					require("multicursors").start()
 				end,
 				mode = { "n", "v" },
-				desc = "Start multi-cursor editing",
 			},
 		},
 	},
@@ -436,53 +435,24 @@ map("n", "<S-Tab>", ":BufferLineCyclePrev<CR>", { silent = true })
 map("n", "<C-n>", ":Neotree toggle<CR>", { silent = true })
 map("n", "<leader>ff", ":Telescope find_files<CR>", { silent = true })
 map("n", "<leader>fg", ":Telescope live_grep<CR>", { silent = true })
-map("n", "<leader>fb", ":Telescope buffers<CR>", { silent = true })
-map("n", "<leader>fh", ":Telescope help_tags<CR>", { silent = true })
-
--- MULTIPLE TERMINALS MAPPINGS
-map("n", "<leader>1", ":1ToggleTerm<CR>", { silent = true, desc = "Terminal 1" })
-map("n", "<leader>2", ":2ToggleTerm<CR>", { silent = true, desc = "Terminal 2" })
-map("n", "<leader>3", ":3ToggleTerm<CR>", { silent = true, desc = "Terminal 3" })
-map("n", "<leader>4", ":4ToggleTerm<CR>", { silent = true, desc = "Terminal 4" })
-
--- Toggle word wrap
-map("n", "<M-w>", function()
-	vim.opt.wrap = not vim.opt.wrap:get()
-	vim.opt.linebreak = vim.opt.wrap:get()
-end, { desc = "Toggle word wrap" })
 
 -- SMART RUN (F5)
 local function smart_run()
 	local bufnr = vim.api.nvim_get_current_buf()
 	local filename = vim.api.nvim_buf_get_name(bufnr)
-	local buftype = vim.bo.buftype
-
-	-- Stop E382 by only running on actual files
-	if buftype ~= "" then
+	if vim.bo.buftype ~= "" then
 		return
 	end
-
 	if filename == "" then
 		vim.notify("Please phantekzy, open a file!", vim.log.levels.WARN, { title = "System" })
 		return
 	end
-
 	vim.cmd("w")
 	local ft = vim.bo.filetype
 	local cmd = ""
-
 	if ft == "php" then
 		cmd = [[cls; echo "--- PHANTEKZY RUNNING PHP ---"; echo ""; php %:p]]
-	elseif ft == "java" then
-		if vim.fn.findfile("mvnw.cmd", ".;") ~= "" then
-			cmd = [[cls; echo "--- PHANTEKZY MAVEN ---"; .\mvnw spring-boot:run]]
-		elseif vim.fn.findfile("gradlew.bat", ".;") ~= "" then
-			cmd = [[cls; echo "--- PHANTEKZY GRADLE ---"; .\gradlew run]]
-		else
-			cmd = [[cls; echo "--- PHANTEKZY JAVA ---"; java %]]
-		end
 	end
-
 	if cmd ~= "" then
 		vim.cmd("TermExec cmd='" .. cmd .. "' direction=float")
 	else
@@ -490,8 +460,8 @@ local function smart_run()
 	end
 end
 
-vim.keymap.set("n", "<F5>", smart_run, { silent = true, desc = "Run PHP/Java or Open Terminal" })
-vim.keymap.set("t", "<esc>", [[<C-\><C-n>]], { desc = "Exit terminal mode" })
+vim.keymap.set("n", "<F5>", smart_run, { silent = true })
+vim.keymap.set("t", "<esc>", [[<C-\><C-n>]])
 
 -- Diagnostics
 vim.diagnostic.config({
@@ -501,11 +471,8 @@ vim.diagnostic.config({
 	update_in_insert = false,
 })
 
-vim.api.nvim_set_hl(0, "DiagnosticUnderlineError", { undercurl = true, sp = "#ff5f5f" })
-vim.api.nvim_set_hl(0, "DiagnosticUnderlineWarn", { undercurl = true, sp = "#ffaa00" })
-vim.api.nvim_set_hl(0, "DiagnosticUnderlineHint", { undercurl = true, sp = "#5fd7ff" })
-vim.api.nvim_set_hl(0, "DiagnosticUnderlineInfo", { undercurl = true, sp = "#87d7ff" })
-
-map("n", "[d", vim.diagnostic.goto_prev, { desc = "Prev diagnostic" })
-map("n", "]d", vim.diagnostic.goto_next, { desc = "Next diagnostic" })
-map("n", "<leader>ld", vim.diagnostic.open_float, { desc = "Show diagnostic" })
+-- Terminals
+map("n", "<leader>1", ":1ToggleTerm<CR>", { silent = true })
+map("n", "<leader>2", ":2ToggleTerm<CR>", { silent = true })
+map("n", "<leader>3", ":3ToggleTerm<CR>", { silent = true })
+map("n", "<leader>4", ":4ToggleTerm<CR>", { silent = true })
