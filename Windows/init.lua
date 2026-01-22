@@ -1,5 +1,5 @@
 -- Phantekzy Neovim Config for Windows (2026)
--- JavaScript / TypeScript / React / PHP / Web Stack
+-- JavaScript / TypeScript / React / PHP / Web Stack / JAVA
 
 -- Leader keys
 vim.g.mapleader = " "
@@ -16,13 +16,7 @@ end
 -- Bootstrap lazy.nvim
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
 if not vim.loop.fs_stat(lazypath) then
-	vim.fn.system({
-		"git",
-		"clone",
-		"--filter=blob:none",
-		"https://github.com/folke/lazy.nvim.git",
-		lazypath,
-	})
+	vim.fn.system({ "git", "clone", "--filter=blob:none", "https://github.com/folke/lazy.nvim.git", lazypath })
 end
 vim.opt.rtp:prepend(lazypath)
 
@@ -67,12 +61,8 @@ require("lazy").setup({
 				terminal_mappings = true,
 				persist_size = true,
 				close_on_exit = false,
-				float_opts = {
-					border = "curved",
-					winblend = 0,
-				},
+				float_opts = { border = "curved", winblend = 0 },
 			})
-			-- Force the floating terminal window to be black
 			vim.api.nvim_set_hl(0, "NormalFloat", { bg = "#000000" })
 			vim.api.nvim_set_hl(0, "FloatBorder", { bg = "#000000", fg = "#ffffff" })
 		end,
@@ -82,14 +72,9 @@ require("lazy").setup({
 	{
 		"akinsho/bufferline.nvim",
 		event = "BufWinEnter",
-		dependencies = { "nvim-tree/nvim-web-devicons" },
 		config = function()
 			require("bufferline").setup({
-				options = {
-					separator_style = "none",
-					show_buffer_close_icons = false,
-					show_close_icon = false,
-				},
+				options = { separator_style = "none", show_buffer_close_icons = false, show_close_icon = false },
 				highlights = {
 					fill = { bg = "NONE" },
 					background = { bg = "NONE", fg = "#888888" },
@@ -153,8 +138,6 @@ require("lazy").setup({
 	-- Editing helpers
 	{ "numToStr/Comment.nvim", event = "BufReadPre", config = true },
 	{ "windwp/nvim-autopairs", event = "InsertEnter", config = true },
-
-	-- Indent guides
 	{
 		"lukas-reineke/indent-blankline.nvim",
 		main = "ibl",
@@ -169,7 +152,7 @@ require("lazy").setup({
 	{
 		"nvim-telescope/telescope.nvim",
 		cmd = "Telescope",
-		dependencies = { "nvim-lua/plenary.nvim" },
+		dependencies = { "nvim-lua/plenary.nvim", "nvim-telescope/telescope-ui-select.nvim" },
 		config = function()
 			require("telescope").setup({
 				defaults = {
@@ -183,16 +166,12 @@ require("lazy").setup({
 		end,
 	},
 
-	-- Telescope UI-Select (Beautifies Code Actions)
+	-- Telescope UI-Select
 	{
 		"nvim-telescope/telescope-ui-select.nvim",
 		config = function()
 			require("telescope").setup({
-				extensions = {
-					["ui-select"] = {
-						require("telescope.themes").get_dropdown({}),
-					},
-				},
+				extensions = { ["ui-select"] = { require("telescope.themes").get_dropdown({}) } },
 			})
 			require("telescope").load_extension("ui-select")
 		end,
@@ -205,7 +184,7 @@ require("lazy").setup({
 		event = { "BufReadPre", "BufNewFile" },
 		config = function()
 			require("nvim-treesitter.configs").setup({
-				ensure_installed = { "lua", "javascript", "typescript", "tsx", "html", "css", "json", "php" },
+				ensure_installed = { "lua", "javascript", "typescript", "tsx", "html", "css", "json", "php", "java" },
 				highlight = { enable = true },
 				indent = { enable = true },
 				auto_install = true,
@@ -213,14 +192,14 @@ require("lazy").setup({
 		end,
 	},
 
-	-- Mason + LSP
+	-- Mason + LSP (Fixed for Neovim 0.11 & No Conflicts)
 	{ "williamboman/mason.nvim", config = true },
 	{ "williamboman/mason-lspconfig.nvim" },
 	{
 		"WhoIsSethDaniel/mason-tool-installer.nvim",
 		config = function()
 			require("mason-tool-installer").setup({
-				ensure_installed = { "intelephense", "prettierd", "ts_ls" },
+				ensure_installed = { "intelephense", "prettierd", "ts_ls", "jdtls", "google-java-format" },
 				auto_update = true,
 				run_on_start = true,
 			})
@@ -228,50 +207,50 @@ require("lazy").setup({
 	},
 	{
 		"neovim/nvim-lspconfig",
-		dependencies = { "williamboman/mason-lspconfig.nvim", "hrsh7th/cmp-nvim-lsp" },
+		dependencies = { "williamboman/mason-lspconfig.nvim", "hrsh7th/cmp-nvim-lsp", "pmizio/typescript-tools.nvim" },
 		config = function()
 			local capabilities = require("cmp_nvim_lsp").default_capabilities()
-			require("mason-lspconfig").setup({
-				ensure_installed = { "intelephense", "lua_ls", "ts_ls", "html", "cssls", "jsonls" },
-			})
 
 			local on_attach = function(_, bufnr)
 				local map = function(mode, lhs, rhs)
 					vim.keymap.set(mode, lhs, rhs, { buffer = bufnr, silent = true })
 				end
-				map("n", "gd", vim.lsp.buf.definition)
+
+				-- SMOOTH JUMP
+				map("n", "gd", function()
+					local ft = vim.bo.filetype
+					if ft:match("typescript") or ft:match("javascript") then
+						vim.cmd("TSToolsGoToSourceDefinition")
+					else
+						vim.lsp.buf.definition()
+					end
+					vim.cmd("normal! zz")
+				end)
+
 				map("n", "K", vim.lsp.buf.hover)
 				map("n", "<leader>ca", vim.lsp.buf.code_action)
 				map("n", "<leader>rn", vim.lsp.buf.rename)
 			end
 
-			-- Fixed for Neovim 0.11 Deprecation
-			vim.lsp.config("intelephense", {
-				capabilities = capabilities,
-				on_attach = on_attach,
-				settings = { intelephense = { telemetry = { enabled = false } } },
+			require("mason-lspconfig").setup({
+				ensure_installed = { "intelephense", "lua_ls", "ts_ls", "html", "cssls", "jsonls", "jdtls" },
 			})
-			vim.lsp.enable("intelephense")
 
-			for _, s in ipairs({ "html", "cssls", "jsonls", "lua_ls", "ts_ls", "eslint", "tailwindcss" }) do
+			-- Neovim 0.11 style enable (Excluding ts_ls to avoid the duplicate bug)
+			local servers = { "html", "cssls", "jsonls", "lua_ls", "jdtls", "eslint", "tailwindcss", "intelephense" }
+			for _, s in ipairs(servers) do
 				vim.lsp.config(s, { capabilities = capabilities, on_attach = on_attach })
 				vim.lsp.enable(s)
 			end
-		end,
-	},
 
-	-- TypeScript / JavaScript
-	{
-		"pmizio/typescript-tools.nvim",
-		ft = { "javascript", "typescript", "typescriptreact", "javascriptreact" },
-		dependencies = { "nvim-lua/plenary.nvim" },
-		config = function()
 			require("typescript-tools").setup({
-				capabilities = require("cmp_nvim_lsp").default_capabilities(),
+				on_attach = on_attach,
+				capabilities = capabilities,
 				settings = {
 					tsserver_file_preferences = {
 						includeCompletionsForImportStatements = true,
 						importModuleSpecifierPreference = "non-relative",
+						includeCompletionsForModuleExports = true,
 					},
 				},
 			})
@@ -313,20 +292,9 @@ require("lazy").setup({
 					["<Tab>"] = cmp.mapping.select_next_item(),
 					["<S-Tab>"] = cmp.mapping.select_prev_item(),
 				},
-				sources = {
-					{ name = "nvim_lsp" },
-					{ name = "luasnip" },
-					{ name = "buffer" },
-					{ name = "path" },
-				},
-				window = {
-					completion = cmp.config.window.bordered(),
-					documentation = cmp.config.window.bordered(),
-				},
-				completion = {
-					autocomplete = false,
-					completeopt = "menu,menuone,noinsert",
-				},
+				sources = { { name = "nvim_lsp" }, { name = "luasnip" }, { name = "buffer" }, { name = "path" } },
+				window = { completion = cmp.config.window.bordered(), documentation = cmp.config.window.bordered() },
+				completion = { autocomplete = false, completeopt = "menu,menuone,noinsert" },
 				experimental = { ghost_text = true },
 			})
 		end,
@@ -344,6 +312,7 @@ require("lazy").setup({
 					html = { "prettierd" },
 					css = { "prettierd" },
 					json = { "prettierd" },
+					java = { "google-java-format" },
 				},
 				format_on_save = { lsp_fallback = true, timeout_ms = 500 },
 			})
@@ -358,7 +327,6 @@ require("lazy").setup({
 		"smoka7/multicursors.nvim",
 		event = "VeryLazy",
 		dependencies = { "nvim-treesitter/nvim-treesitter", "nvimtools/hydra.nvim" },
-		opts = {},
 		keys = {
 			{
 				"<C-d>",
@@ -371,7 +339,7 @@ require("lazy").setup({
 		},
 	},
 
-	-- Simple eye-friendly theme
+	-- Theme
 	{
 		"folke/tokyonight.nvim",
 		lazy = false,
@@ -380,17 +348,14 @@ require("lazy").setup({
 			require("tokyonight").setup({
 				style = "night",
 				transparent = true,
-				styles = {
-					sidebars = "transparent",
-					floats = "transparent",
-				},
+				styles = { sidebars = "transparent", floats = "transparent" },
 			})
 			vim.cmd([[colorscheme tokyonight]])
 		end,
 	},
 })
 
--- Transparency
+-- Transparency Override
 local function transparent()
 	for _, g in ipairs({
 		"Normal",
@@ -434,13 +399,13 @@ map("n", "<M-w>", function()
 	vim.opt.linebreak = vim.opt.wrap:get()
 end, { desc = "Toggle word wrap" })
 
--- SMART RUN (F5) - Added buftype check to stop E382
+-- SMART RUN (F5)
 local function smart_run()
 	local bufnr = vim.api.nvim_get_current_buf()
 	local filename = vim.api.nvim_buf_get_name(bufnr)
 	local buftype = vim.bo.buftype
 
-	-- Stop E382 by only running on actual files (not Neo-tree or Terminals)
+	-- Stop E382 by only running on actual files
 	if buftype ~= "" then
 		return
 	end
@@ -456,6 +421,14 @@ local function smart_run()
 
 	if ft == "php" then
 		cmd = [[cls; echo "--- PHANTEKZY RUNNING PHP ---"; echo ""; php %:p]]
+	elseif ft == "java" then
+		if vim.fn.findfile("mvnw.cmd", ".;") ~= "" then
+			cmd = [[cls; echo "--- PHANTEKZY MAVEN ---"; .\mvnw spring-boot:run]]
+		elseif vim.fn.findfile("gradlew.bat", ".;") ~= "" then
+			cmd = [[cls; echo "--- PHANTEKZY GRADLE ---"; .\gradlew run]]
+		else
+			cmd = [[cls; echo "--- PHANTEKZY JAVA ---"; java %]]
+		end
 	end
 
 	if cmd ~= "" then
@@ -465,7 +438,7 @@ local function smart_run()
 	end
 end
 
-vim.keymap.set("n", "<F5>", smart_run, { silent = true, desc = "Run PHP or Open Terminal" })
+vim.keymap.set("n", "<F5>", smart_run, { silent = true, desc = "Run PHP/Java or Open Terminal" })
 vim.keymap.set("t", "<esc>", [[<C-\><C-n>]], { desc = "Exit terminal mode" })
 
 -- Diagnostics
@@ -475,6 +448,7 @@ vim.diagnostic.config({
 	underline = true,
 	update_in_insert = false,
 })
+
 vim.api.nvim_set_hl(0, "DiagnosticUnderlineError", { undercurl = true, sp = "#ff5f5f" })
 vim.api.nvim_set_hl(0, "DiagnosticUnderlineWarn", { undercurl = true, sp = "#ffaa00" })
 vim.api.nvim_set_hl(0, "DiagnosticUnderlineHint", { undercurl = true, sp = "#5fd7ff" })
