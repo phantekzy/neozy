@@ -85,20 +85,26 @@ require("lazy").setup({
 		end,
 	},
 
-	-- Status line
+	-- Status line (ADVANCED PROGRAMMER VERSION - ONLY SECTION MODIFIED)
 	{
 		"nvim-lualine/lualine.nvim",
 		event = "VimEnter",
 		config = function()
 			local mode_color = {
-				n = { fg = "#00afff", bg = "NONE" },
-				i = { fg = "#00ff00", bg = "NONE" },
-				v = { fg = "#bb00ff", bg = "NONE" },
-				c = { fg = "#ffaa00", bg = "NONE" },
-				R = { fg = "#ff0000", bg = "NONE" },
+				n = { fg = "#00afff" },
+				i = { fg = "#00ff00" },
+				v = { fg = "#bb00ff" },
+				c = { fg = "#ffaa00" },
+				R = { fg = "#ff0000" },
 			}
 			require("lualine").setup({
-				options = { globalstatus = true, section_separators = "", component_separators = "" },
+				options = {
+					globalstatus = true,
+					theme = "tokyonight",
+					component_separators = { left = "", right = "" },
+					section_separators = { left = "", right = "" },
+					disabled_filetypes = { statusline = { "neo-tree", "toggleterm" } },
+				},
 				sections = {
 					lualine_a = {
 						{
@@ -107,15 +113,60 @@ require("lazy").setup({
 								return " " .. m
 							end,
 							color = function()
-								return mode_color[vim.fn.mode()] or { fg = "#ffffff" }
+								return {
+									fg = (mode_color[vim.fn.mode()] or { fg = "#ffffff" }).fg,
+									bg = "NONE",
+									gui = "bold",
+								}
 							end,
 						},
 					},
-					lualine_b = { { "branch", icon = "" } },
-					lualine_c = { "filename" },
-					lualine_x = { "filetype", "encoding" },
-					lualine_y = { "progress" },
-					lualine_z = { "location" },
+					lualine_b = {
+						{ "branch", icon = "" },
+						{ "diff", symbols = { added = " ", modified = " ", removed = " " } },
+					},
+					lualine_c = {
+						{
+							function()
+								return "󰉖 " .. vim.fn.fnamemodify(vim.fn.getcwd(), ":t")
+							end,
+							color = { fg = "#565f89", gui = "italic" },
+						},
+						{
+							"filename",
+							file_status = true,
+							path = 1, -- Shows folder/file.js (Essential for Web Dev)
+							symbols = { modified = " ●", readonly = " " },
+						},
+					},
+					lualine_x = {
+						{ "diagnostics", symbols = { error = " ", warn = " ", info = " ", hint = "󰛨 " } },
+						{
+							function()
+								local clients = vim.lsp.get_active_clients({ bufnr = 0 })
+								if #clients == 0 then
+									return "󰚦 No LSP"
+								end
+								local names = {}
+								for _, client in ipairs(clients) do
+									if client.name ~= "tsserver" then
+										table.insert(names, client.name)
+									end
+								end
+								return "󰄭 " .. table.concat(names, "|")
+							end,
+							color = { fg = "#00afff", gui = "bold" },
+						},
+					},
+					lualine_y = { "filetype", "progress" },
+					lualine_z = {
+						{ "location", icon = "" },
+						{
+							function()
+								return " " .. os.date("%R")
+							end,
+						},
+					},
 				},
 			})
 		end,
@@ -279,19 +330,20 @@ require("lazy").setup({
 						luasnip.lsp_expand(a.body)
 					end,
 				},
-				mapping = {
-					["<CR>"] = cmp.mapping(function(fallback)
-						if cmp.visible() then
-							cmp.confirm({ select = true })
-						else
-							fallback()
-						end
-					end, { "i", "s" }),
+				mapping = cmp.mapping.preset.insert({
+					["<CR>"] = cmp.mapping.confirm({ select = true }),
+
+					-- Manually trigger completion
 					["<C-Space>"] = cmp.mapping.complete(),
-					["<C-l>"] = cmp.mapping.complete(),
+					["<C-l>"] = cmp.mapping.complete(), -- Reliable backup for Windows/Alacritty
+
 					["<Tab>"] = cmp.mapping.select_next_item(),
 					["<S-Tab>"] = cmp.mapping.select_prev_item(),
-				},
+
+					-- Scroll documentation
+					["<C-b>"] = cmp.mapping.scroll_docs(-4),
+					["<C-f>"] = cmp.mapping.scroll_docs(4),
+				}),
 				sources = { { name = "nvim_lsp" }, { name = "luasnip" }, { name = "buffer" }, { name = "path" } },
 				window = { completion = cmp.config.window.bordered(), documentation = cmp.config.window.bordered() },
 				completion = { autocomplete = false, completeopt = "menu,menuone,noinsert" },
