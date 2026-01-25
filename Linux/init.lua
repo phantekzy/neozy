@@ -1,4 +1,4 @@
--- Phantekzy Neovim Config Linux (2026)
+-- Phantekzy Neovim Config (2026)
 -- JavaScript / TypeScript / React / PHP / Web Stack/C/RUST/JAVA
 
 -- Leader keys
@@ -457,8 +457,20 @@ local function smart_run()
 	elseif ft == "php" then
 		cmd = [[clear && echo "--- PHANTEKZY RUNNING PHP ---" && echo "" && php %:p]]
 	elseif ft == "rust" then
-		if vim.fn.findfile("Cargo.toml", ".;") ~= "" then
-			cmd = [[clear && echo "--- PHANTEKZY CARGO RUN ---" && echo "" && cargo run]]
+		local root = vim.fn.findfile("Cargo.toml", ".;")
+		if root ~= "" then
+			local filepath = vim.fn.expand("%:p")
+			-- Detect if file is in src/bin and run the specific binary
+			if filepath:match("src/bin/") then
+				local bin_name = vim.fn.expand("%:t:r")
+				cmd = string.format(
+					[[clear && echo "--- PHANTEKZY CARGO BIN RUN (%s) ---" && echo "" && cargo run --bin %s]],
+					bin_name,
+					bin_name
+				)
+			else
+				cmd = [[clear && echo "--- PHANTEKZY CARGO RUN ---" && echo "" && cargo run]]
+			end
 		else
 			cmd = [[clear && echo "--- PHANTEKZY RUSTC RUN ---" && echo "" && rustc %:p -o %:t:r && ./%:t:r]]
 		end
