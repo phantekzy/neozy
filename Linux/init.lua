@@ -218,9 +218,6 @@ require("lazy").setup({
 				ensure_installed = {
 					"intelephense",
 					"prettierd",
-					"ts_ls",
-					"rust-analyzer",
-					"rustfmt",
 					"jdtls",
 					"clangd",
 				},
@@ -261,11 +258,9 @@ require("lazy").setup({
 				ensure_installed = {
 					"intelephense",
 					"lua_ls",
-					"ts_ls",
 					"html",
 					"cssls",
 					"jsonls",
-					"rust_analyzer",
 					"jdtls",
 				},
 			})
