@@ -1,58 +1,73 @@
-cat << 'EOF' > README.md
-# Neozy : High-Performance Dual-Environment Config
+# NEOZY: High-Performance Dual-Environment Neovim
 
-Neozy is my personal Neovim configuration, built to handle a high-stakes development workflow that switches between **Systems Engineering (Linux)** and **Web Architecture (Windows)**. I designed this setup to be modular, fast, and project-intelligent.
+NEOZY is a specialized Neovim configuration engineered for a high-stakes workflow that bridges Systems Engineering (Linux) and Web Architecture (Windows). It is designed to be modular, project-intelligent, and performance-first.
 
-## The Dual-OS Philosophy
+---
 
-Unlike "all-in-one" configs that bloat your editor, Neozy is strategically split:
+## The Dual-Environment Philosophy
 
-* **Linux (Kali Profile):** This is the "Full Power" mode. It is configured to initialize heavy-duty Language Servers (LSP) for **Rust, Java, and C**. The F5 Smart Run logic is integrated with systems-level build tools like Cargo, Maven, and custom Rust binary detection.
-* **Windows (Web Profile):** This is the "Lean" mode. I use Windows exclusively for Web Development (JS/TS, React, PHP). To keep performance at 100%, this profile strips out the systems-level overhead, focusing on high-speed formatting and frontend diagnostics.
+Neozy utilizes a split-profile architecture to maintain maximum speed across different operating systems:
 
-## Deep Dive: Plugin Architecture
+### Linux Profile (Systems Mode)
+Optimized for Kali/Linux environments. This profile initializes a heavy-duty backend suite:
+* **LSP Integration:** Full support for Rust (rust-analyzer), Java (jdtls), and C (clangd).
+* **Build Intelligence:** Integrated with Cargo, Maven, and Gradle.
+* **Smart Execution:** The F5 engine detects systems-level build tools and manages local binaries.
 
-### 1. The Execution Engine (ToggleTerm + Custom F5)
-At the heart of this config is a custom `smart_run()` Lua function. It understands project context:
-* **Manifest Detection:** It uses `vim.fn.findfile` to look for `Cargo.toml`, `mvnw`, or `gradlew`.
-* **Rust Binary Intelligence:** Specifically designed to handle `src/bin/` structures. It automatically detects individual `.rs` binaries and executes `cargo run --bin` for the current file.
-* **Persistent Terminals:** It utilizes `ToggleTerm` to manage 4 independent terminal instances. These are "floating" terminals with a forced black background (`#000000`) for maximum contrast against the transparent editor.
+### Windows Profile (Web Mode)
+Optimized for frontend and backend web development (JS/TS, React, PHP):
+* **Performance:** Strips systems-level overhead for 100% UI responsiveness.
+* **Frontend Diagnostics:** High-speed formatting and real-time linting via Prettier and Typescript-Tools.
+* **Lean Architecture:** Focuses on high-speed buffer switching and frontend telemetry.
 
-### 2. Language Server Protocol (LSP) & Mason
-I use a "Managed LSP" approach to ensure environment stability:
-* **Intelephense:** Tailored for professional PHP development with telemetry disabled.
-* **Typescript-Tools:** Replaces the standard `tsserver` for faster React and TS performance.
-* **Mason-Tool-Installer:** Ensures formatters (`prettierd`, `rustfmt`, `google-java-format`) and LSPs are automatically updated.
+---
 
-### 3. Visual & UI Optimization
-* **Transparency Engine:** A custom Lua loop iterates through UI highlights (`Normal`, `SignColumn`, `LineNr`, etc.) and sets the alpha-channel to `NONE`, allowing terminal blur to show through the **TokyoNight** theme.
-* **Lualine:** Stripped of unnecessary icons. Uses a dynamic `mode_color` table to change UI color based on Insert, Visual, or Normal mode.
-* **Bufferline:** Seamless, tab-less look using `separator_style = "none"`.
+## Technical Deep Dive
 
-### 4. Code Intelligence
-* **Treesitter:** `auto_install = true` for immediate high-accuracy syntax highlighting on new languages.
-* **Conform.nvim:** Asynchronous formatting on save via `BufWritePre` to prevent UI freezing.
-* **Multi-Cursors:** Parallel editing via `multicursors.nvim` (mapped to `Ctrl-D`).
+### 1. Smart Run Engine (F5 Contextual Execution)
+The configuration features a custom Lua-based execution engine that detects project context at runtime:
+* **Manifest Discovery:** Uses `vim.fn.findfile` to identify `Cargo.toml`, `mvnw`, or `gradlew`.
+* **Rust Binary Intelligence:** Specifically handles `src/bin/*.rs` structures. If a file is within the `bin` directory, it automatically executes `cargo run --bin [filename]`.
+* **Isolated Terminals:** Leverages `ToggleTerm` to manage 4 persistent, floating instances with a forced black (`#000000`) background for maximum contrast.
 
-## Keymaps Overview (Technical)
+### 2. LSP & Code Intelligence
+* **Managed LSP:** Mason-controlled lifecycle for Intelephense (PHP), Typescript-Tools (React/TS), and more.
+* **Asynchronous Formatting:** `Conform.nvim` handles `BufWritePre` hooks to ensure zero UI freezing during formatting.
+* **Treesitter:** Configured for `auto_install` to provide immediate, high-accuracy syntax highlighting.
 
-| Key | Context | Action |
+### 3. UI Optimization
+* **Transparency Engine:** A custom Lua loop modifies UI highlights (`Normal`, `SignColumn`, `LineNr`) to set alpha-channels to `NONE`, enabling terminal blur effects.
+* **Lualine:** Minimalist status bar using a dynamic `mode_color` table that shifts UI colors based on Vim mode.
+* **Bufferline:** A seamless, tab-less interface using `separator_style = "none"`.
+
+---
+
+## Technical Keymaps
+
+| Key | Mode | Action |
 | :--- | :--- | :--- |
-| **F5** | Normal | `smart_run()` (Contextual Build/Exec + **Rust Bin Support**) |
-| **<Leader>1-4** | Normal | `ToggleTerm` (Persistent Instance 1-4) |
-| **<C-n>** | Normal | `Neotree toggle` (File Explorer) |
-| **<Tab>** | Normal | `BufferLineCycleNext` (Next Tab) |
-| **<S-Tab>** | Normal | `BufferLineCyclePrev` (Previous Tab) |
-| **<Leader>f** | Normal | `conform.format()` (Auto-format) |
-| **<Leader>ca** | LSP | `vim.lsp.buf.code_action` |
-| **<Leader>x** | Normal | `bdelete` (Close Buffer) |
-| **<Esc>** | Terminal | Exit Terminal Mode (`<C-\><C-n>`) |
+| **F5** | Normal | Smart Run (Rust Bin / Maven / Gradle / GCC) |
+| **Leader 1-4** | Normal | ToggleTerm Persistent Instance 1-4 |
+| **Ctrl + N** | Normal | Neotree Toggle (File Explorer) |
+| **Tab / S-Tab** | Normal | Buffer Cycling (Next/Previous) |
+| **Leader + f** | Normal | Conform.nvim Asynchronous Format |
+| **Leader + ca** | LSP | Code Action |
+| **Esc** | Terminal | Escape Terminal Mode to Normal |
 
-## Installation & Setup
+---
 
-1. **Clone:** `git clone https://github.com/phantekzy/neozy.git`
-2. **Linux Deploy:** Copy `Linux/init.lua` to `~/.config/nvim/init.lua`
-3. **Windows Deploy:** Copy `Windows/init.lua` to `~/AppData/Local/nvim/init.lua`
+## Installation
 
-**Note:** Ensure you have a **Nerd Font** installed to render the icons correctly in the status line and file explorer.
-EOF
+1. **Clone the repository:**
+   `git clone https://github.com/phantekzy/neozy.git`
+
+2. **Deploy Linux Profile:**
+   `cp Linux/init.lua ~/.config/nvim/init.lua`
+
+3. **Deploy Windows Profile:**
+   `copy Windows/init.lua %LocalAppData%\nvim\init.lua`
+
+*Note: A Nerd Font is required for status line and file explorer icon rendering.*
+
+---
+**Maintained by Phantekzy**
