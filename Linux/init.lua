@@ -365,6 +365,7 @@ require("lazy").setup({
 		"smoka7/multicursors.nvim",
 		event = "VeryLazy",
 		dependencies = { "nvim-treesitter/nvim-treesitter", "nvimtools/hydra.nvim" },
+		opts = {},
 		keys = {
 			{
 				"<C-d>",
