@@ -54,6 +54,10 @@ require("lazy").setup({
 				open_mapping = [[<C-\>]],
 				direction = "float",
 				shade_terminals = false,
+				-- Terminal number
+				on_open = function(term)
+					vim.api.nvim_buf_set_name(term.bufnr, "Phantekzy Terminal " .. term.id)
+				end,
 				start_in_insert = true,
 				insert_mappings = true,
 				terminal_mappings = true,
