@@ -257,6 +257,7 @@ require("lazy").setup({
 		"WhoIsSethDaniel/mason-tool-installer.nvim",
 		config = function()
 			require("mason-tool-installer").setup({
+				-- FIX: Added 'ts_ls' to ensure the binary exists for typescript-tools
 				ensure_installed = { "intelephense", "prettierd", "ts_ls" },
 				auto_update = true,
 				run_on_start = true,
@@ -288,7 +289,8 @@ require("lazy").setup({
 			end
 
 			require("mason-lspconfig").setup({
-				ensure_installed = { "intelephense", "lua_ls", "ts_ls", "html", "cssls", "jsonls" },
+				-- FIX: Ensure 'ts_ls' is installed (but we don't config it here, typescript-tools does that)
+				ensure_installed = { "intelephense", "lua_ls", "html", "cssls", "jsonls", "ts_ls" },
 			})
 
 			local servers = { "html", "cssls", "jsonls", "lua_ls", "eslint", "tailwindcss", "intelephense" }
@@ -300,7 +302,11 @@ require("lazy").setup({
 			require("typescript-tools").setup({
 				on_attach = on_attach,
 				capabilities = capabilities,
+				-- FIX: Explicit root detection for Windows to prevent "Single File" mode
+				root_dir = require("lspconfig.util").root_pattern("tsconfig.json", "package.json", ".git"),
 				settings = {
+					spawn_with_shell = false,
+					expose_as_code_action = "all", -- Allows <leader>ca to "Add missing imports"
 					tsserver_file_preferences = {
 						includeCompletionsForImportStatements = true,
 						includeCompletionsForModuleExports = true,
@@ -335,7 +341,8 @@ require("lazy").setup({
 					end,
 				},
 				mapping = cmp.mapping.preset.insert({
-					["<CR>"] = cmp.mapping.confirm({ select = true }),
+					-- FIX: Behavior Insert ensures the auto-import text edit is applied
+					["<CR>"] = cmp.mapping.confirm({ behavior = cmp.ConfirmBehavior.Insert, select = true }),
 					["<C-Space>"] = cmp.mapping.complete(),
 					["<Tab>"] = cmp.mapping.select_next_item(),
 					["<S-Tab>"] = cmp.mapping.select_prev_item(),
