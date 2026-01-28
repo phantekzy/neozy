@@ -88,12 +88,11 @@ require("lazy").setup({
 		end,
 	},
 
-	-- Solid Linux-Style Status Line (Modern 2026 API - Minimalist Icon Style)
+	-- Status Line
 	{
 		"nvim-lualine/lualine.nvim",
 		event = "VimEnter",
 		config = function()
-			-- Your exact Linux color palette
 			local mode_color = {
 				n = { fg = "#00afff", bg = "#16161e" },
 				i = { fg = "#00ff00", bg = "#16161e" },
@@ -120,60 +119,24 @@ require("lazy").setup({
 					lualine_a = {
 						{
 							"mode",
-							fmt = function(m)
-								return " " .. m
-							end,
-							color = function()
-								return mode_color[vim.fn.mode()] or { fg = "#ffffff", bg = "#16161e" }
-							end,
+							fmt = function(m) return " " .. m end,
+							color = function() return mode_color[vim.fn.mode()] or { fg = "#ffffff", bg = "#16161e" } end,
 						},
 					},
 					lualine_b = {
 						{ "branch", icon = "", color = { fg = "#888888", bg = "#16161e" } },
-						{
-							"diff",
-							symbols = { added = " ", modified = " ", removed = " " },
-							color = { bg = "#16161e" },
-						},
+						{ "diff", symbols = { added = " ", modified = " ", removed = " " }, color = { bg = "#16161e" } },
 					},
 					lualine_c = {
-						{
-							"filename",
-							file_status = true,
-							path = 0, -- Buffer name only
-							symbols = { modified = " ●", readonly = " " },
-							color = { fg = "#ffffff", bg = "#16161e", gui = "bold" },
-						},
+						{ "filename", file_status = true, path = 0, symbols = { modified = " ●", readonly = " " }, color = { fg = "#ffffff", bg = "#16161e", gui = "bold" } },
 					},
 					lualine_x = {
-						-- Diagnostics stay essential
-						{
-							"diagnostics",
-							symbols = { error = " ", warn = " ", info = " ", hint = "󰛨 " },
-							color = { bg = "#16161e" },
-						},
-						-- BETTER: Only show the language ICON, no text to save space
-						{
-							"filetype",
-							icon_only = true,
-							separator = "",
-							padding = { left = 1, right = 0 },
-							color = { bg = "#16161e" },
-						},
-						-- Encoding is usually redundant, removed text but kept icons for clarity
+						{ "diagnostics", symbols = { error = " ", warn = " ", info = " ", hint = "󰛨 " }, color = { bg = "#16161e" } },
+						{ "filetype", icon_only = true, padding = { left = 1, right = 0 }, color = { bg = "#16161e" } },
 						{ "encoding", color = { fg = "#888888", bg = "#16161e" } },
 					},
-					lualine_y = {
-						{ "progress", color = { fg = "#888888", bg = "#16161e" } },
-					},
-					lualine_z = {
-						{
-							function()
-								return " " .. os.date("%R")
-							end,
-							color = { fg = "#4fd6be", bg = "#16161e", gui = "bold" },
-						},
-					},
+					lualine_y = { { "progress", color = { fg = "#888888", bg = "#16161e" } } },
+					lualine_z = { { function() return " " .. os.date("%R") end, color = { fg = "#4fd6be", bg = "#16161e", gui = "bold" } } },
 				},
 			})
 		end,
@@ -257,7 +220,6 @@ require("lazy").setup({
 		"WhoIsSethDaniel/mason-tool-installer.nvim",
 		config = function()
 			require("mason-tool-installer").setup({
-				-- FIX: Added 'ts_ls' to ensure the binary exists for typescript-tools
 				ensure_installed = { "intelephense", "prettierd", "ts_ls" },
 				auto_update = true,
 				run_on_start = true,
@@ -274,6 +236,7 @@ require("lazy").setup({
 				local map = function(mode, lhs, rhs)
 					vim.keymap.set(mode, lhs, rhs, { buffer = bufnr, silent = true })
 				end
+				-- YOUR ORIGINAL GD LOGIC
 				map("n", "gd", function()
 					local ft = vim.bo.filetype
 					if ft:match("typescript") or ft:match("javascript") then
@@ -289,7 +252,6 @@ require("lazy").setup({
 			end
 
 			require("mason-lspconfig").setup({
-				-- FIX: Ensure 'ts_ls' is installed (but we don't config it here, typescript-tools does that)
 				ensure_installed = { "intelephense", "lua_ls", "html", "cssls", "jsonls", "ts_ls" },
 			})
 
@@ -302,11 +264,11 @@ require("lazy").setup({
 			require("typescript-tools").setup({
 				on_attach = on_attach,
 				capabilities = capabilities,
-				-- FIX: Explicit root detection for Windows to prevent "Single File" mode
+				-- THE ONLY FIX: Makes Windows find your project files
 				root_dir = require("lspconfig.util").root_pattern("tsconfig.json", "package.json", ".git"),
 				settings = {
 					spawn_with_shell = false,
-					expose_as_code_action = "all", -- Allows <leader>ca to "Add missing imports"
+					expose_as_code_action = "all",
 					tsserver_file_preferences = {
 						includeCompletionsForImportStatements = true,
 						includeCompletionsForModuleExports = true,
@@ -322,26 +284,15 @@ require("lazy").setup({
 	{
 		"hrsh7th/nvim-cmp",
 		event = "InsertEnter",
-		dependencies = {
-			"hrsh7th/cmp-nvim-lsp",
-			"hrsh7th/cmp-buffer",
-			"hrsh7th/cmp-path",
-			"L3MON4D3/LuaSnip",
-			"saadparwaiz1/cmp_luasnip",
-			"rafamadriz/friendly-snippets",
-		},
+		dependencies = { "hrsh7th/cmp-nvim-lsp", "hrsh7th/cmp-buffer", "hrsh7th/cmp-path", "L3MON4D3/LuaSnip", "saadparwaiz1/cmp_luasnip", "rafamadriz/friendly-snippets" },
 		config = function()
 			local cmp = require("cmp")
 			local luasnip = require("luasnip")
 			require("luasnip.loaders.from_vscode").lazy_load()
 			cmp.setup({
-				snippet = {
-					expand = function(a)
-						luasnip.lsp_expand(a.body)
-					end,
-				},
+				snippet = { expand = function(a) luasnip.lsp_expand(a.body) end },
 				mapping = cmp.mapping.preset.insert({
-					-- FIX: Behavior Insert ensures the auto-import text edit is applied
+					-- THE ONLY FIX: Confirms the import when you hit Enter
 					["<CR>"] = cmp.mapping.confirm({ behavior = cmp.ConfirmBehavior.Insert, select = true }),
 					["<C-Space>"] = cmp.mapping.complete(),
 					["<Tab>"] = cmp.mapping.select_next_item(),
@@ -366,18 +317,10 @@ require("lazy").setup({
 		event = "BufWritePre",
 		config = function()
 			require("conform").setup({
-				formatters_by_ft = {
-					javascript = { "prettierd" },
-					typescript = { "prettierd" },
-					html = { "prettierd" },
-					css = { "prettierd" },
-					json = { "prettierd" },
-				},
+				formatters_by_ft = { javascript = { "prettierd" }, typescript = { "prettierd" }, html = { "prettierd" }, css = { "prettierd" }, json = { "prettierd" } },
 				format_on_save = { lsp_fallback = true, timeout_ms = 500 },
 			})
-			vim.keymap.set("n", "<leader>f", function()
-				require("conform").format({ async = true })
-			end)
+			vim.keymap.set("n", "<leader>f", function() require("conform").format({ async = true }) end)
 		end,
 	},
 
@@ -387,15 +330,7 @@ require("lazy").setup({
 		event = "VeryLazy",
 		dependencies = { "nvim-treesitter/nvim-treesitter", "nvimtools/hydra.nvim" },
 		opts = {},
-		keys = {
-			{
-				"<C-d>",
-				function()
-					require("multicursors").start()
-				end,
-				mode = { "n", "v" },
-			},
-		},
+		keys = { { "<C-d>", function() require("multicursors").start() end, mode = { "n", "v" } } },
 	},
 
 	-- Theme
@@ -404,11 +339,7 @@ require("lazy").setup({
 		lazy = false,
 		priority = 1000,
 		config = function()
-			require("tokyonight").setup({
-				style = "night",
-				transparent = true,
-				styles = { sidebars = "transparent", floats = "transparent" },
-			})
+			require("tokyonight").setup({ style = "night", transparent = true, styles = { sidebars = "transparent", floats = "transparent" } })
 			vim.cmd([[colorscheme tokyonight]])
 		end,
 	},
@@ -416,19 +347,7 @@ require("lazy").setup({
 
 -- Transparency Override
 local function transparent()
-	for _, g in ipairs({
-		"Normal",
-		"NormalNC",
-		"NormalFloat",
-		"SignColumn",
-		"StatusLine",
-		"StatusLineNC",
-		"VertSplit",
-		"LineNr",
-		"CursorLineNr",
-		"BufferLineFill",
-		"BufferLineBackground",
-	}) do
+	for _, g in ipairs({ "Normal", "NormalNC", "NormalFloat", "SignColumn", "StatusLine", "StatusLineNC", "VertSplit", "LineNr", "CursorLineNr", "BufferLineFill", "BufferLineBackground" }) do
 		pcall(vim.api.nvim_set_hl, 0, g, { fg = "#bfbfbf", bg = "NONE" })
 	end
 	vim.api.nvim_set_hl(0, "Visual", { bg = "#333333", fg = "#ffffff" })
@@ -448,9 +367,7 @@ map("n", "<leader>fg", ":Telescope live_grep<CR>", { silent = true })
 local function smart_run()
 	local bufnr = vim.api.nvim_get_current_buf()
 	local filename = vim.api.nvim_buf_get_name(bufnr)
-	if vim.bo.buftype ~= "" then
-		return
-	end
+	if vim.bo.buftype ~= "" then return end
 	if filename == "" then
 		vim.notify("Please phantekzy, open a file!", vim.log.levels.WARN, { title = "System" })
 		return
@@ -458,29 +375,19 @@ local function smart_run()
 	vim.cmd("w")
 	local ft = vim.bo.filetype
 	local cmd = ""
-	if ft == "php" then
-		cmd = [[cls; echo "--- PHANTEKZY RUNNING PHP ---"; echo ""; php %:p]]
-	end
-	if cmd ~= "" then
-		vim.cmd("TermExec cmd='" .. cmd .. "' direction=float")
-	else
-		vim.cmd("ToggleTerm direction=float")
-	end
+	if ft == "php" then cmd = [[cls; echo "--- PHANTEKZY RUNNING PHP ---"; echo ""; php %:p]] end
+	if cmd ~= "" then vim.cmd("TermExec cmd='" .. cmd .. "' direction=float") else vim.cmd("ToggleTerm direction=float") end
 end
 
 vim.keymap.set("n", "<F5>", smart_run, { silent = true })
 vim.keymap.set("t", "<esc>", [[<C-\><C-n>]])
 
 -- Diagnostics
-vim.diagnostic.config({
-	virtual_text = { prefix = "●", spacing = 2 },
-	signs = true,
-	underline = true,
-	update_in_insert = false,
-})
+vim.diagnostic.config({ virtual_text = { prefix = "●", spacing = 2 }, signs = true, underline = true, update_in_insert = false })
 
 -- Terminals
 map("n", "<leader>1", ":1ToggleTerm<CR>", { silent = true })
 map("n", "<leader>2", ":2ToggleTerm<CR>", { silent = true })
 map("n", "<leader>3", ":3ToggleTerm<CR>", { silent = true })
 map("n", "<leader>4", ":4ToggleTerm<CR>", { silent = true })
+
