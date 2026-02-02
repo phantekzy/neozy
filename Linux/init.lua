@@ -1,5 +1,5 @@
--- Phantekzy Neovim Config (2026)
--- JavaScript / TypeScript / React / PHP / Web Stack/C/RUST/JAVA
+-- Phantekzy Neovim Config (2026) AUTOCOMPLETE ON
+-- JavaScript / TypeScript / React / PHP / Web Stack / C / RUST / JAVA
 
 -- Leader keys
 vim.g.mapleader = " "
@@ -8,13 +8,7 @@ vim.g.maplocalleader = " "
 -- Bootstrap lazy.nvim
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
 if not vim.loop.fs_stat(lazypath) then
-	vim.fn.system({
-		"git",
-		"clone",
-		"--filter=blob:none",
-		"https://github.com/folke/lazy.nvim.git",
-		lazypath,
-	})
+	vim.fn.system({ "git", "clone", "--filter=blob:none", "https://github.com/folke/lazy.nvim.git", lazypath })
 end
 vim.opt.rtp:prepend(lazypath)
 
@@ -54,7 +48,6 @@ require("lazy").setup({
 				open_mapping = [[<C-\>]],
 				direction = "float",
 				shade_terminals = false,
-				-- Terminal number
 				on_open = function(term)
 					vim.api.nvim_buf_set_name(term.bufnr, "Phantekzy Terminal " .. term.id)
 				end,
@@ -77,11 +70,7 @@ require("lazy").setup({
 		dependencies = { "nvim-tree/nvim-web-devicons" },
 		config = function()
 			require("bufferline").setup({
-				options = {
-					separator_style = "none",
-					show_buffer_close_icons = false,
-					show_close_icon = false,
-				},
+				options = { separator_style = "none", show_buffer_close_icons = false, show_close_icon = false },
 				highlights = {
 					fill = { bg = "NONE" },
 					background = { bg = "NONE", fg = "#888888" },
@@ -298,7 +287,7 @@ require("lazy").setup({
 		end,
 	},
 
-	-- Completion
+	-- Completion (FIXED)
 	{
 		"hrsh7th/nvim-cmp",
 		event = "InsertEnter",
@@ -320,21 +309,17 @@ require("lazy").setup({
 						luasnip.lsp_expand(a.body)
 					end,
 				},
-				mapping = {
-					["<CR>"] = cmp.mapping(function(fallback)
-						if cmp.visible() then
-							cmp.confirm({ select = true })
-						else
-							fallback()
-						end
-					end, { "i", "s" }),
+				mapping = cmp.mapping.preset.insert({
+					-- FIX: ConfirmBehavior.Insert ensures auto-imports are actually added to the top of the file
+					["<CR>"] = cmp.mapping.confirm({ behavior = cmp.ConfirmBehavior.Insert, select = true }),
 					["<C-Space>"] = cmp.mapping.complete(),
 					["<Tab>"] = cmp.mapping.select_next_item(),
 					["<S-Tab>"] = cmp.mapping.select_prev_item(),
-				},
+				}),
 				sources = { { name = "nvim_lsp" }, { name = "luasnip" }, { name = "buffer" }, { name = "path" } },
 				window = { completion = cmp.config.window.bordered(), documentation = cmp.config.window.bordered() },
-				completion = { autocomplete = false, completeopt = "menu,menuone,noinsert" },
+				-- FIX: Enabled automatic completion while typing
+				completion = { autocomplete = { cmp.TriggerEvent.TextChanged }, completeopt = "menu,menuone,noinsert" },
 				experimental = { ghost_text = true },
 			})
 		end,
@@ -460,7 +445,6 @@ local function smart_run()
 		local root = vim.fn.findfile("Cargo.toml", ".;")
 		if root ~= "" then
 			local filepath = vim.fn.expand("%:p")
-			-- Detect if file is in src/bin and run the specific binary
 			if filepath:match("src/bin/") then
 				local bin_name = vim.fn.expand("%:t:r")
 				cmd = string.format(
