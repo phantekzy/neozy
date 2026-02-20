@@ -7,7 +7,7 @@ vim.g.maplocalleader = " "
 
 -- Bootstrap lazy.nvim
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
-if not vim.loop.fs_stat(lazypath) then
+if not vim.uv.fs_stat(lazypath) then
 	vim.fn.system({ "git", "clone", "--filter=blob:none", "https://github.com/folke/lazy.nvim.git", lazypath })
 end
 vim.opt.rtp:prepend(lazypath)
@@ -194,7 +194,14 @@ require("lazy").setup({
 					"rust",
 					"java",
 				},
-				highlight = { enable = true },
+				highlight = {
+					enable = true,
+					-- RAM Optimization  : Disable for files > 100KB
+					disable = function(_, buf)
+						local ok, stats = pcall(vim.uv.fs_stat, vim.api.nvim_buf_get_name(buf))
+						return ok and stats and stats.size > 100 * 1024
+					end,
+				},
 				indent = { enable = true },
 				auto_install = true,
 			})
@@ -208,19 +215,15 @@ require("lazy").setup({
 		"WhoIsSethDaniel/mason-tool-installer.nvim",
 		config = function()
 			require("mason-tool-installer").setup({
-				ensure_installed = {
-					"intelephense",
-					"prettierd",
-					"jdtls",
-					"clangd",
-				},
+				ensure_installed = { "intelephense", "prettierd", "jdtls", "clangd" },
 				auto_update = true,
-				run_on_start = true,
+				run_on_start = false, --  Doesnt stop the 5-second UI freeze on open
 			})
 		end,
 	},
 	{
 		"neovim/nvim-lspconfig",
+		event = { "BufReadPre", "BufNewFile" },
 		dependencies = { "williamboman/mason-lspconfig.nvim", "hrsh7th/cmp-nvim-lsp", "pmizio/typescript-tools.nvim" },
 		config = function()
 			local capabilities = require("cmp_nvim_lsp").default_capabilities()
@@ -230,7 +233,6 @@ require("lazy").setup({
 					vim.keymap.set(mode, lhs, rhs, { buffer = bufnr, silent = true })
 				end
 
-				-- SMOOTH JUMP (Like Ctrl+Click)
 				map("n", "gd", function()
 					local ft = vim.bo.filetype
 					if ft:match("typescript") or ft:match("javascript") then
@@ -238,7 +240,6 @@ require("lazy").setup({
 					else
 						vim.lsp.buf.definition()
 					end
-					-- Only center the screen, don't touch Neotree
 					vim.cmd("normal! zz")
 				end)
 
@@ -248,17 +249,10 @@ require("lazy").setup({
 			end
 
 			require("mason-lspconfig").setup({
-				ensure_installed = {
-					"intelephense",
-					"lua_ls",
-					"html",
-					"cssls",
-					"jsonls",
-					"jdtls",
-				},
+				ensure_installed = { "intelephense", "lua_ls", "html", "cssls", "jsonls", "jdtls" },
 			})
 
-			-- PHP
+			-- PHP Specialized Settings
 			vim.lsp.config("intelephense", {
 				capabilities = capabilities,
 				on_attach = on_attach,
@@ -266,14 +260,14 @@ require("lazy").setup({
 			})
 			vim.lsp.enable("intelephense")
 
-			-- OTHER LANGUAGES (C, Rust, Java, etc.)
+			-- Native Setup for other languages
 			local servers = { "html", "cssls", "jsonls", "lua_ls", "rust_analyzer", "jdtls", "clangd" }
 			for _, s in ipairs(servers) do
 				vim.lsp.config(s, { capabilities = capabilities, on_attach = on_attach })
 				vim.lsp.enable(s)
 			end
 
-			-- TYPESCRIPT / JAVASCRIPT
+			-- Typescript Tools
 			require("typescript-tools").setup({
 				on_attach = on_attach,
 				capabilities = capabilities,
@@ -287,7 +281,7 @@ require("lazy").setup({
 		end,
 	},
 
-	-- Completion (FIXED)
+	-- Completion
 	{
 		"hrsh7th/nvim-cmp",
 		event = "InsertEnter",
@@ -310,7 +304,6 @@ require("lazy").setup({
 					end,
 				},
 				mapping = cmp.mapping.preset.insert({
-					-- FIX: ConfirmBehavior.Insert ensures auto-imports are actually added to the top of the file
 					["<CR>"] = cmp.mapping.confirm({ behavior = cmp.ConfirmBehavior.Insert, select = true }),
 					["<C-Space>"] = cmp.mapping.complete(),
 					["<Tab>"] = cmp.mapping.select_next_item(),
@@ -318,7 +311,6 @@ require("lazy").setup({
 				}),
 				sources = { { name = "nvim_lsp" }, { name = "luasnip" }, { name = "buffer" }, { name = "path" } },
 				window = { completion = cmp.config.window.bordered(), documentation = cmp.config.window.bordered() },
-				-- FIX: Enabled automatic completion while typing
 				completion = { autocomplete = { cmp.TriggerEvent.TextChanged }, completeopt = "menu,menuone,noinsert" },
 				experimental = { ghost_text = true },
 			})
@@ -382,7 +374,7 @@ require("lazy").setup({
 	},
 })
 
--- Transparency
+-- Transparency & Custom Highlights
 local function transparent()
 	local groups = {
 		"Normal",
@@ -401,6 +393,7 @@ local function transparent()
 	end
 	vim.api.nvim_set_hl(0, "Visual", { bg = "#333333", fg = "#ffffff" })
 	vim.api.nvim_set_hl(0, "TermCursor", { fg = "#000000", bg = "#ffffff" })
+	vim.api.nvim_set_hl(0, "DiagnosticUnderlineError", { undercurl = true, sp = "#ff5f5f" })
 end
 transparent()
 
@@ -420,7 +413,7 @@ map("n", "<leader>2", ":2ToggleTerm<CR>", { silent = true })
 map("n", "<leader>3", ":3ToggleTerm<CR>", { silent = true })
 map("n", "<leader>4", ":4ToggleTerm<CR>", { silent = true })
 
--- SMART RUN (F5)
+-- SMART RUN (F5) - Full Custom Phantekzy Logic
 local function smart_run()
 	local bufnr = vim.api.nvim_get_current_buf()
 	local filename = vim.api.nvim_buf_get_name(bufnr)
@@ -479,7 +472,6 @@ map("t", "<esc>", [[<C-\><C-n>]])
 
 -- Diagnostics
 vim.diagnostic.config({ virtual_text = { prefix = "●", spacing = 2 }, signs = true, underline = true })
-vim.api.nvim_set_hl(0, "DiagnosticUnderlineError", { undercurl = true, sp = "#ff5f5f" })
 map("n", "[d", vim.diagnostic.goto_prev)
 map("n", "]d", vim.diagnostic.goto_next)
 map("n", "<leader>ld", vim.diagnostic.open_float)
