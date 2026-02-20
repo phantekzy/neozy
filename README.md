@@ -1,5 +1,15 @@
 # NEOZY: High-Performance Dual-Environment Neovim
 
+      __                          __             __                          
+       /\ \                        /\ \__         /\ \                         
+ _____ \ \ \___       __       ___ \ \ ,_\     __ \ \ \/'\   ____    __  __    
+/\ '__`\\ \  _ `\   /'__`\   /' _ `\\ \ \/   /'__`\\ \ , <  /\_ ,`\ /\ \/\ \   
+\ \ \L\ \\ \ \ \ \ /\ \L\.\_ /\ \/\ \\ \ \_ /\  __/ \ \ \\`\\/_/  /_\ \ \_\ \  
+ \ \ ,__/ \ \_\ \_\\ \__/.\_\\ \_\ \_\\ \__\\ \____\ \ \_\ \_\/\____\\/`____ \ 
+  \ \ \/   \/_/\/_/ \/__/\/_/ \/_/\/_/ \/__/ \/____/  \/_/\/_/\/____/ `/___/> \
+   \ \_\                                                                 /\___/
+    \/_/                                                                 \/__/
+
 NEOZY is a specialized Neovim configuration engineered for a high-stakes workflow that bridges Systems Engineering (Linux) and Web Architecture (Windows). It is designed to be modular, project-intelligent, and performance-first.
 
 ---
