@@ -44,9 +44,14 @@ require("lazy").setup({
     { "nvim-tree/nvim-web-devicons", lazy = true },
 
     -- [ NEW ] UI Enhancements
-    { "stevearc/dressing.nvim",      opts = {} },
+    {
+        "stevearc/dressing.nvim",
+        event = "VeryLazy",
+        opts = {}
+    },
     {
         "rcarriga/nvim-notify",
+        event = "VeryLazy",
         opts = { background_colour = "#000000", timeout = 3000 }
     },
     {
@@ -113,13 +118,13 @@ require("lazy").setup({
             dashboard.section.header.val = {
                 [[        __                          __             __                          ]],
                 [[       /\ \                        /\ \__         /\ \                         ]],
-                [[ _____ \ \ \___       __       ___ \ \ ,_\     __ \ \ \/'\   ____    __  __    ]],
-                [[/\ '__`\\ \  _ `\   /'__`\   /' _ `\\ \ \/   /'__`\\ \ , <  /\_ ,`\ /\ \/\ \   ]],
-                [[\ \ \L\ \\ \ \ \ \ /\ \L\.\_ /\ \/\ \\ \ \_ /\  __/ \ \ \\`\\/_/  /_\ \ \_\ \  ]],
-                [[ \ \ ,__/ \ \_\ \_\\ \__/.\_\\ \_\ \_\\ \__\\ \____\ \ \_\ \_\/\____\\/`____ \ ]],
+                [[ _____ \ \ \___       __       ___ \ \ ,_\     __ \ \ \/'\   ____     __  __   ]],
+                [[/\ '__`\\ \  _ `\   /'__`\   /' _ `\\ \ \/   /'__`\\ \ , <  /\_ ,`\ /\ \/\ \  ]],
+                [[\ \ \L\ \\ \ \ \ \ /\ \L\.\_ /\ \/\ \\ \ \_ /\  __/ \ \ \\`\\/_/  /_\ \ \_\ \ ]],
+                [[ \ \ ,__/ \ \_\ \_\\ \__/.\_\\ \_\ \_\\ \__\\ \____\ \ \_\ \_\/\____\\/`____ \]],
                 [[  \ \ \/   \/_/\/_/ \/__/\/_/ \/_/\/_/ \/__/ \/____/  \/_/\/_/\/____/ `/___/> \]],
-                [[   \ \_\                                                                 /\___/]],
-                [[    \/_/                                                                 \/__/ ]],
+                [[   \ \_\                                                                /\___/]],
+                [[    \/_/                                                                \/__/ ]],
             }
             dashboard.section.header.opts.hl = "Function"
 
@@ -148,10 +153,7 @@ require("lazy").setup({
                 " ",
                 "󰸗  " .. os.date("%A, %B %d") .. "  |  " .. get_greeting(),
                 "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
-                "    NVIM v" ..
-                vim.version().major ..
-                "." ..
-                vim.version().minor ..
+                "    NVIM v" .. vim.version().major .. "." .. vim.version().minor ..
                 "  |  󰚀  PLUGINS: " .. stats.loaded .. "/" .. stats.count .. "  |  ⚡ " .. ms .. "ms",
                 "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
             }
@@ -179,6 +181,14 @@ require("lazy").setup({
     {
         "akinsho/toggleterm.nvim",
         version = "*",
+        cmd = { "ToggleTerm", "TermExec" }, -- Deep Lazy Load trigger
+        keys = {
+            { "<leader>1", ":1ToggleTerm<CR>",    silent = true,           desc = "Terminal 1" },
+            { "<leader>2", ":2ToggleTerm<CR>",    silent = true,           desc = "Terminal 2" },
+            { "<leader>3", ":3ToggleTerm<CR>",    silent = true,           desc = "Terminal 3" },
+            { "<leader>4", ":4ToggleTerm<CR>",    silent = true,           desc = "Terminal 4" },
+            { [[<C-\>]],   "<cmd>ToggleTerm<cr>", desc = "Toggle Terminal" }
+        },
         config = function()
             require("toggleterm").setup({
                 size = 20,
@@ -221,7 +231,7 @@ require("lazy").setup({
     -- Status line
     {
         "nvim-lualine/lualine.nvim",
-        event = "VimEnter",
+        event = "VeryLazy",
         config = function()
             local mode_color = {
                 n = { fg = "#00afff", bg = "NONE" },
@@ -236,12 +246,8 @@ require("lazy").setup({
                     lualine_a = {
                         {
                             "mode",
-                            fmt = function(m)
-                                return " " .. m
-                            end,
-                            color = function()
-                                return mode_color[vim.fn.mode()] or { fg = "#ffffff" }
-                            end,
+                            fmt = function(m) return " " .. m end,
+                            color = function() return mode_color[vim.fn.mode()] or { fg = "#ffffff" } end,
                         },
                     },
                     lualine_b = { { "branch", icon = "" } },
@@ -259,6 +265,9 @@ require("lazy").setup({
         "nvim-neo-tree/neo-tree.nvim",
         branch = "v3.x",
         cmd = "Neotree",
+        keys = {
+            { "<C-n>", ":Neotree toggle<CR>", silent = true, desc = "Toggle NeoTree" },
+        },
         dependencies = { "nvim-lua/plenary.nvim", "MunifTanjim/nui.nvim" },
         config = function()
             require("neo-tree").setup({
@@ -292,7 +301,24 @@ require("lazy").setup({
     {
         "nvim-telescope/telescope.nvim",
         cmd = "Telescope",
-        dependencies = { "nvim-lua/plenary.nvim" },
+        keys = {
+            { "<leader>ff", ":Telescope find_files<CR>", silent = true },
+            { "<leader>fg", ":Telescope live_grep<CR>",  silent = true },
+            { "<leader>fb", ":Telescope buffers<CR>",    silent = true },
+            { "<leader>fh", ":Telescope help_tags<CR>",  silent = true },
+        },
+        dependencies = {
+            "nvim-lua/plenary.nvim",
+            {
+                "nvim-telescope/telescope-ui-select.nvim",
+                config = function()
+                    require("telescope").setup({
+                        extensions = { ["ui-select"] = { require("telescope.themes").get_dropdown({}) } },
+                    })
+                    require("telescope").load_extension("ui-select")
+                end,
+            }
+        },
         config = function()
             require("telescope").setup({
                 defaults = {
@@ -303,17 +329,6 @@ require("lazy").setup({
                 },
                 pickers = { find_files = { hidden = true } },
             })
-        end,
-    },
-
-    -- Telescope UI-Select
-    {
-        "nvim-telescope/telescope-ui-select.nvim",
-        config = function()
-            require("telescope").setup({
-                extensions = { ["ui-select"] = { require("telescope.themes").get_dropdown({}) } },
-            })
-            require("telescope").load_extension("ui-select")
         end,
     },
 
@@ -341,27 +356,32 @@ require("lazy").setup({
         end,
     },
 
-    -- Mason + LSP
-    { "williamboman/mason.nvim",          config = true },
-    { "williamboman/mason-lspconfig.nvim" },
-    {
-        "WhoIsSethDaniel/mason-tool-installer.nvim",
-        config = function()
-            require("mason-tool-installer").setup({
-                ensure_installed = {
-                    "intelephense", "prettierd", "jdtls", "clangd",
-                    "tailwindcss-language-server", "eslint-lsp",
-                },
-                auto_update = true,
-                run_on_start = false,
-            })
-        end,
-    },
+    -- Mason + LSP (Grouped for Performance)
     {
         "neovim/nvim-lspconfig",
         event = { "BufReadPre", "BufNewFile" },
-        dependencies = { "williamboman/mason-lspconfig.nvim", "hrsh7th/cmp-nvim-lsp", "pmizio/typescript-tools.nvim" },
+        dependencies = {
+            "williamboman/mason.nvim",
+            "williamboman/mason-lspconfig.nvim",
+            "hrsh7th/cmp-nvim-lsp",
+            "pmizio/typescript-tools.nvim",
+            {
+                "WhoIsSethDaniel/mason-tool-installer.nvim",
+                config = function()
+                    require("mason-tool-installer").setup({
+                        ensure_installed = {
+                            "intelephense", "prettierd", "jdtls", "clangd",
+                            "tailwindcss-language-server", "eslint-lsp",
+                        },
+                        auto_update = true,
+                        run_on_start = false,
+                    })
+                end,
+            }
+        },
         config = function()
+            require("mason").setup()
+
             local capabilities = require("cmp_nvim_lsp").default_capabilities()
             local on_attach = function(_, bufnr)
                 local map = function(mode, lhs, rhs)
@@ -420,9 +440,7 @@ require("lazy").setup({
             cmp.setup({
                 performance = { debounce = 60, fetching_timeout = 200 },
                 snippet = {
-                    expand = function(a)
-                        luasnip.lsp_expand(a.body)
-                    end,
+                    expand = function(a) luasnip.lsp_expand(a.body) end,
                 },
                 mapping = cmp.mapping.preset.insert({
                     ["<CR>"] = cmp.mapping.confirm({ behavior = cmp.ConfirmBehavior.Insert, select = true }),
@@ -466,9 +484,7 @@ require("lazy").setup({
         keys = {
             {
                 "<C-d>",
-                function()
-                    require("multicursors").start()
-                end,
+                function() require("multicursors").start() end,
                 mode = { "n", "v" },
             },
         },
@@ -504,36 +520,25 @@ local function transparent()
 end
 transparent()
 
--- Keymaps
+-- Core Global Keymaps (Plugin-specific ones moved to Lazy 'keys' for performance)
 local map = vim.keymap.set
 map("n", "<Tab>", ":BufferLineCycleNext<CR>", { silent = true })
 map("n", "<S-Tab>", ":BufferLineCyclePrev<CR>", { silent = true })
-map("n", "<C-n>", ":Neotree toggle<CR>", { silent = true })
-map("n", "<leader>ff", ":Telescope find_files<CR>", { silent = true })
-map("n", "<leader>fg", ":Telescope live_grep<CR>", { silent = true })
-map("n", "<leader>fb", ":Telescope buffers<CR>", { silent = true })
-map("n", "<leader>fh", ":Telescope help_tags<CR>", { silent = true })
-
--- Terminals
-map("n", "<leader>1", ":1ToggleTerm<CR>", { silent = true })
-map("n", "<leader>2", ":2ToggleTerm<CR>", { silent = true })
-map("n", "<leader>3", ":3ToggleTerm<CR>", { silent = true })
-map("n", "<leader>4", ":4ToggleTerm<CR>", { silent = true })
 
 -- SMART RUN (F5) - FULL PHANTEKZY LOGIC RESTORED
 local function smart_run()
     local bufnr = vim.api.nvim_get_current_buf()
     local filename = vim.api.nvim_buf_get_name(bufnr)
+
     if vim.bo.buftype ~= "" or filename == "" then
         vim.notify("Please phantekzy, open a file!", vim.log.levels.WARN, { title = "System" })
         return
     end
-    if vim.bo.modified then
-        vim.cmd("w")
-    end
+    if vim.bo.modified then vim.cmd("w") end
 
     local ft = vim.bo.filetype
     local cmd = ""
+
     if ft == "c" then
         cmd = [[clear && echo "--- PHANTEKZY COMPILING C ---" && echo "" && gcc %:p -o %:t:r -lm && ./%:t:r]]
     elseif ft == "php" then
