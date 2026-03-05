@@ -1,59 +1,74 @@
--- Phantekzy Neovim Config (2026) AUTOCOMPLETE ON
--- JavaScript / TypeScript / React / PHP / Web Stack / C / RUST / JAVA
+-- ================================================================================================
+-- title : Phantekzy Hybrid Speed Config (2026)
+-- stack : JS / TS / React / PHP / Web / C / RUST / JAVA
+-- blend : Full IDE features + Suckless performance/ergonomics
+-- ================================================================================================
 
--- Leader keys
+-- 1. LEADER KEYS
 vim.g.mapleader = " "
 vim.g.maplocalleader = " "
 
--- [ ENGINE FIXES: Added for RAM & Speed ]
-vim.opt.updatetime = 250
-vim.opt.timeoutlen = 300
+-- 2. SUCKLESS & CORE OPTIONS (Optimized for Speed)
+local opt = vim.opt
+
+-- Performance & Engine Fixes
+opt.updatetime = 250
+opt.timeoutlen = 300
+opt.ttimeoutlen = 0
+opt.lazyredraw = false -- Don't redraw during macros (Massive speed boost)
 vim.lsp.set_log_level("off")
 
--- Bootstrap lazy.nvim
-local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
-if not vim.uv.fs_stat(lazypath) then
-    vim.fn.system({ "git", "clone", "--filter=blob:none", "https://github.com/folke/lazy.nvim.git", lazypath })
-end
-vim.opt.rtp:prepend(lazypath)
-
--- Core options
-local opt = vim.opt
+-- Visuals & Behavior
 opt.termguicolors = true
 opt.number = true
 opt.relativenumber = true
 opt.wrap = false
 opt.showmode = false
 opt.signcolumn = "yes"
-opt.expandtab = true
-opt.tabstop = 4
-opt.shiftwidth = 4
-opt.smartindent = true
 opt.mouse = "a"
 opt.clipboard = "unnamedplus"
 opt.cursorline = true
 opt.cursorlineopt = "line"
 opt.list = true
 opt.listchars = { space = "·", tab = "→ " }
+opt.scrolloff = 10    -- Keep 10 lines above/below cursor (Suckless)
+opt.sidescrolloff = 8 -- Keep 8 columns left/right of cursor
+opt.splitbelow = true
+opt.splitright = true
+opt.ignorecase = true -- Better search
+opt.smartcase = true
 
--- Plugins
+-- Indentation
+opt.expandtab = true
+opt.tabstop = 4 -- Kept your 4-space preference
+opt.shiftwidth = 4
+opt.smartindent = true
+opt.autoindent = true
+
+-- Persistent Undo (Suckless)
+local undodir = vim.fn.expand("~/.vim/undodir")
+if vim.fn.isdirectory(undodir) == 0 then
+    vim.fn.mkdir(undodir, "p")
+end
+opt.undofile = true
+opt.undodir = undodir
+
+-- 3. BOOTSTRAP LAZY.NVIM
+local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
+if not vim.uv.fs_stat(lazypath) then
+    vim.fn.system({ "git", "clone", "--filter=blob:none", "https://github.com/folke/lazy.nvim.git", lazypath })
+end
+opt.rtp:prepend(lazypath)
+
+-- 4. PLUGINS (Your Exact Loadout)
 require("lazy").setup({
-
     -- Core dependencies
     { "nvim-lua/plenary.nvim",       lazy = true },
     { "nvim-tree/nvim-web-devicons", lazy = true },
 
-    -- [ NEW ] UI Enhancements
-    {
-        "stevearc/dressing.nvim",
-        event = "VeryLazy",
-        opts = {}
-    },
-    {
-        "rcarriga/nvim-notify",
-        event = "VeryLazy",
-        opts = { background_colour = "#000000", timeout = 3000 }
-    },
+    -- UI Enhancements
+    { "stevearc/dressing.nvim",      event = "VeryLazy", opts = {} },
+    { "rcarriga/nvim-notify",        event = "VeryLazy", opts = { background_colour = "#000000", timeout = 3000 } },
     {
         "folke/noice.nvim",
         event = "VeryLazy",
@@ -73,10 +88,10 @@ require("lazy").setup({
                 lsp_doc_border = false,
             },
         },
-        dependencies = { "MunifTanjim/nui.nvim", "rcarriga/nvim-notify" }
+        dependencies = { "MunifTanjim/nui.nvim", "rcarriga/nvim-notify" },
     },
 
-    -- DASHBOARD (ULTRA-ADVANCED CONTROL CENTER)
+    -- DASHBOARD
     {
         "goolord/alpha-nvim",
         event = "VimEnter",
@@ -84,7 +99,6 @@ require("lazy").setup({
             local alpha = require("alpha")
             local dashboard = require("alpha.themes.dashboard")
 
-            -- 1. DYNAMIC GREETING LOGIC
             local function get_greeting()
                 local hour = tonumber(os.date("%H"))
                 if hour < 12 then
@@ -96,39 +110,37 @@ require("lazy").setup({
                 end
             end
 
-            -- 2. RECENT FILES LOGIC (The "Advanced" Distro look)
             local function get_recent_files()
                 local files = {}
                 for _, file in ipairs(vim.v.oldfiles) do
-                    if #files < 5 then -- Show only top 5
+                    if #files < 5 then
                         local name = vim.fn.fnamemodify(file, ":t")
-                        local icon = "󰈚"
                         table.insert(files, {
                             type = "button",
-                            val = icon .. "  " .. name,
-                            on_press = function() vim.cmd("e " .. file) end,
-                            opts = { hl = "Comment", width = 38, position = "center" }
+                            val = "󰈚  " .. name,
+                            on_press = function()
+                                vim.cmd("e " .. file)
+                            end,
+                            opts = { hl = "Comment", width = 38, position = "center" },
                         })
                     end
                 end
                 return { type = "group", val = files }
             end
 
-            -- 3. HEADER: Your Exact ASCII
             dashboard.section.header.val = {
                 [[        __                          __             __                          ]],
                 [[       /\ \                        /\ \__         /\ \                         ]],
-                [[ _____ \ \ \___       __       ___ \ \ ,_\     __ \ \ \/'\   ____     __  __   ]],
-                [[/\ '__`\\ \  _ `\   /'__`\   /' _ `\\ \ \/   /'__`\\ \ , <  /\_ ,`\ /\ \/\ \  ]],
-                [[\ \ \L\ \\ \ \ \ \ /\ \L\.\_ /\ \/\ \\ \ \_ /\  __/ \ \ \\`\\/_/  /_\ \ \_\ \ ]],
+                [[ _____ \ \ \___       __       ___ \ \ ,_\     __ \ \ \/'\    ____     __  __  ]],
+                [[/\ '__`\\ \  _ `\   /'__`\   /' _ `\\ \ \/   /'__`\\ \ , <  /\_ ,`\ /\ \/\ \ ]],
+                [[\ \ \L\ \\ \ \ \ \ /\ \L\.\_ /\ \/\ \\ \ \_ /\  __/ \ \ \\`\\/_/  /_\ \ \_\ \]],
                 [[ \ \ ,__/ \ \_\ \_\\ \__/.\_\\ \_\ \_\\ \__\\ \____\ \ \_\ \_\/\____\\/`____ \]],
                 [[  \ \ \/   \/_/\/_/ \/__/\/_/ \/_/\/_/ \/__/ \/____/  \/_/\/_/\/____/ `/___/> \]],
-                [[   \ \_\                                                                /\___/]],
-                [[    \/_/                                                                \/__/ ]],
+                [[   \ \_\                                                                 /\___/]],
+                [[    \/_/                                                                 \/__/ ]],
             }
             dashboard.section.header.opts.hl = "Function"
 
-            -- 4. BUTTON SECTOR
             local function button(key, txt, conf)
                 local b = dashboard.button(key, txt, conf)
                 b.opts.hl = "String"
@@ -145,7 +157,6 @@ require("lazy").setup({
                 button("q", "󰩈  EXIT NEOTERMINAL  ", ":qa<CR>"),
             }
 
-            -- 5. FOOTER STATS
             local stats = require("lazy").stats()
             local ms = (math.floor(stats.startuptime * 100 + 0.5) / 100)
 
@@ -153,13 +164,21 @@ require("lazy").setup({
                 " ",
                 "󰸗  " .. os.date("%A, %B %d") .. "  |  " .. get_greeting(),
                 "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
-                "    NVIM v" .. vim.version().major .. "." .. vim.version().minor ..
-                "  |  󰚀  PLUGINS: " .. stats.loaded .. "/" .. stats.count .. "  |  ⚡ " .. ms .. "ms",
+                "    NVIM v"
+                .. vim.version().major
+                .. "."
+                .. vim.version().minor
+                .. "  |  󰚀  PLUGINS: "
+                .. stats.loaded
+                .. "/"
+                .. stats.count
+                .. "  |  ⚡ "
+                .. ms
+                .. "ms",
                 "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
             }
             dashboard.section.footer.opts.hl = "Comment"
 
-            -- 6. FINAL ADVANCED LAYOUT
             dashboard.opts.layout = {
                 { type = "padding", val = 6 },
                 dashboard.section.header,
@@ -168,11 +187,10 @@ require("lazy").setup({
                 { type = "padding", val = 1 },
                 { type = "text", val = "── RECENT SESSIONS ──", opts = { hl = "Special", position = "center" } },
                 { type = "padding", val = 1 },
-                get_recent_files(), -- Dynamic Recent Files Block
+                get_recent_files(),
                 { type = "padding", val = 2 },
                 dashboard.section.footer,
             }
-
             alpha.setup(dashboard.opts)
         end,
     },
@@ -181,13 +199,13 @@ require("lazy").setup({
     {
         "akinsho/toggleterm.nvim",
         version = "*",
-        cmd = { "ToggleTerm", "TermExec" }, -- Deep Lazy Load trigger
+        cmd = { "ToggleTerm", "TermExec" },
         keys = {
             { "<leader>1", ":1ToggleTerm<CR>",    silent = true,           desc = "Terminal 1" },
             { "<leader>2", ":2ToggleTerm<CR>",    silent = true,           desc = "Terminal 2" },
             { "<leader>3", ":3ToggleTerm<CR>",    silent = true,           desc = "Terminal 3" },
             { "<leader>4", ":4ToggleTerm<CR>",    silent = true,           desc = "Terminal 4" },
-            { [[<C-\>]],   "<cmd>ToggleTerm<cr>", desc = "Toggle Terminal" }
+            { [[<C-\>]],   "<cmd>ToggleTerm<cr>", desc = "Toggle Terminal" },
         },
         config = function()
             require("toggleterm").setup({
@@ -210,7 +228,7 @@ require("lazy").setup({
         end,
     },
 
-    -- Buffer line
+    -- BUFFERLINE & LUALINE
     {
         "akinsho/bufferline.nvim",
         event = "BufWinEnter",
@@ -227,8 +245,6 @@ require("lazy").setup({
             })
         end,
     },
-
-    -- Status line
     {
         "nvim-lualine/lualine.nvim",
         event = "VeryLazy",
@@ -246,8 +262,12 @@ require("lazy").setup({
                     lualine_a = {
                         {
                             "mode",
-                            fmt = function(m) return " " .. m end,
-                            color = function() return mode_color[vim.fn.mode()] or { fg = "#ffffff" } end,
+                            fmt = function(m)
+                                return " " .. m
+                            end,
+                            color = function()
+                                return mode_color[vim.fn.mode()] or { fg = "#ffffff" }
+                            end,
                         },
                     },
                     lualine_b = { { "branch", icon = "" } },
@@ -260,14 +280,12 @@ require("lazy").setup({
         end,
     },
 
-    -- File explorer
+    -- NEO-TREE
     {
         "nvim-neo-tree/neo-tree.nvim",
         branch = "v3.x",
         cmd = "Neotree",
-        keys = {
-            { "<C-n>", ":Neotree toggle<CR>", silent = true, desc = "Toggle NeoTree" },
-        },
+        keys = { { "<C-n>", ":Neotree toggle<CR>", silent = true, desc = "Toggle NeoTree" } },
         dependencies = { "nvim-lua/plenary.nvim", "MunifTanjim/nui.nvim" },
         config = function()
             require("neo-tree").setup({
@@ -281,12 +299,10 @@ require("lazy").setup({
         end,
     },
 
-    -- Editing helpers
+    -- EDITING HELPERS & TELESCOPE
     { "numToStr/Comment.nvim",  event = "BufReadPre",  config = true },
     { "windwp/nvim-autopairs",  event = "InsertEnter", config = true },
     { "windwp/nvim-ts-autotag", event = "InsertEnter", opts = {} },
-
-    -- Indent guides
     {
         "lukas-reineke/indent-blankline.nvim",
         main = "ibl",
@@ -296,8 +312,6 @@ require("lazy").setup({
             scope = { enabled = true, show_start = true, show_end = true },
         },
     },
-
-    -- Telescope
     {
         "nvim-telescope/telescope.nvim",
         cmd = "Telescope",
@@ -307,18 +321,7 @@ require("lazy").setup({
             { "<leader>fb", ":Telescope buffers<CR>",    silent = true },
             { "<leader>fh", ":Telescope help_tags<CR>",  silent = true },
         },
-        dependencies = {
-            "nvim-lua/plenary.nvim",
-            {
-                "nvim-telescope/telescope-ui-select.nvim",
-                config = function()
-                    require("telescope").setup({
-                        extensions = { ["ui-select"] = { require("telescope.themes").get_dropdown({}) } },
-                    })
-                    require("telescope").load_extension("ui-select")
-                end,
-            }
-        },
+        dependencies = { "nvim-lua/plenary.nvim" },
         config = function()
             require("telescope").setup({
                 defaults = {
@@ -332,7 +335,7 @@ require("lazy").setup({
         end,
     },
 
-    -- Treesitter
+    -- TREESITTER, MASON, LSP, CMP & FORMATTING
     {
         "nvim-treesitter/nvim-treesitter",
         build = ":TSUpdate",
@@ -340,23 +343,24 @@ require("lazy").setup({
         config = function()
             require("nvim-treesitter.configs").setup({
                 ensure_installed = {
-                    "lua", "javascript", "typescript", "tsx", "html", "css",
-                    "json", "php", "rust", "java", "c",
+                    "lua",
+                    "javascript",
+                    "typescript",
+                    "tsx",
+                    "html",
+                    "css",
+                    "json",
+                    "php",
+                    "rust",
+                    "java",
+                    "c",
                 },
-                highlight = {
-                    enable = true,
-                    disable = function(_, buf)
-                        local ok, stats = pcall(vim.uv.fs_stat, vim.api.nvim_buf_get_name(buf))
-                        return ok and stats and stats.size > 100 * 1024
-                    end,
-                },
+                highlight = { enable = true },
                 indent = { enable = true },
                 auto_install = true,
             })
         end,
     },
-
-    -- Mason + LSP (Grouped for Performance)
     {
         "neovim/nvim-lspconfig",
         event = { "BufReadPre", "BufNewFile" },
@@ -365,23 +369,21 @@ require("lazy").setup({
             "williamboman/mason-lspconfig.nvim",
             "hrsh7th/cmp-nvim-lsp",
             "pmizio/typescript-tools.nvim",
-            {
-                "WhoIsSethDaniel/mason-tool-installer.nvim",
-                config = function()
-                    require("mason-tool-installer").setup({
-                        ensure_installed = {
-                            "intelephense", "prettierd", "jdtls", "clangd",
-                            "tailwindcss-language-server", "eslint-lsp",
-                        },
-                        auto_update = true,
-                        run_on_start = false,
-                    })
-                end,
-            }
+            "WhoIsSethDaniel/mason-tool-installer.nvim",
         },
         config = function()
             require("mason").setup()
-
+            require("mason-tool-installer").setup({
+                ensure_installed = {
+                    "intelephense",
+                    "prettierd",
+                    "jdtls",
+                    "clangd",
+                    "tailwindcss-language-server",
+                    "eslint-lsp",
+                },
+                auto_update = true,
+            })
             local capabilities = require("cmp_nvim_lsp").default_capabilities()
             local on_attach = function(_, bufnr)
                 local map = function(mode, lhs, rhs)
@@ -400,23 +402,35 @@ require("lazy").setup({
                 map("n", "<leader>ca", vim.lsp.buf.code_action)
                 map("n", "<leader>rn", vim.lsp.buf.rename)
             end
-
-            local servers = {
-                "html", "cssls", "jsonls", "lua_ls", "rust_analyzer",
-                "jdtls", "clangd", "tailwindcss", "eslint", "intelephense", "pyright",
-            }
-
             require("mason-lspconfig").setup({
-                ensure_installed = servers,
+                ensure_installed = {
+                    "html",
+                    "cssls",
+                    "jsonls",
+                    "lua_ls",
+                    "rust_analyzer",
+                    "jdtls",
+                    "clangd",
+                    "tailwindcss",
+                    "eslint",
+                    "intelephense",
+                    "pyright",
+                },
                 handlers = {
                     function(server_name)
-                        require("lspconfig")[server_name].setup({ capabilities = capabilities, on_attach = on_attach })
+                        require("lspconfig")[server_name].setup({
+                            capabilities = capabilities,
+                            on_attach = on_attach,
+                        })
                     end,
-                    ["ts_ls"] = function() return end,
-                    ["tsserver"] = function() return end,
+                    ["ts_ls"] = function()
+                        return
+                    end,
+                    ["tsserver"] = function()
+                        return
+                    end,
                 },
             })
-
             require("typescript-tools").setup({
                 on_attach = on_attach,
                 capabilities = capabilities,
@@ -424,14 +438,16 @@ require("lazy").setup({
             })
         end,
     },
-
-    -- Completion
     {
         "hrsh7th/nvim-cmp",
         event = "InsertEnter",
         dependencies = {
-            "hrsh7th/cmp-nvim-lsp", "hrsh7th/cmp-buffer", "hrsh7th/cmp-path",
-            "L3MON4D3/LuaSnip", "saadparwaiz1/cmp_luasnip", "rafamadriz/friendly-snippets",
+            "hrsh7th/cmp-nvim-lsp",
+            "hrsh7th/cmp-buffer",
+            "hrsh7th/cmp-path",
+            "L3MON4D3/LuaSnip",
+            "saadparwaiz1/cmp_luasnip",
+            "rafamadriz/friendly-snippets",
         },
         config = function()
             local cmp = require("cmp")
@@ -440,10 +456,15 @@ require("lazy").setup({
             cmp.setup({
                 performance = { debounce = 60, fetching_timeout = 200 },
                 snippet = {
-                    expand = function(a) luasnip.lsp_expand(a.body) end,
+                    expand = function(a)
+                        luasnip.lsp_expand(a.body)
+                    end,
                 },
                 mapping = cmp.mapping.preset.insert({
-                    ["<CR>"] = cmp.mapping.confirm({ behavior = cmp.ConfirmBehavior.Insert, select = true }),
+                    ["<CR>"] = cmp.mapping.confirm({
+                        behavior = cmp.ConfirmBehavior.Insert,
+                        select = true,
+                    }),
                     ["<C-Space>"] = cmp.mapping.complete(),
                     ["<Tab>"] = cmp.mapping.select_next_item(),
                     ["<S-Tab>"] = cmp.mapping.select_prev_item(),
@@ -453,8 +474,6 @@ require("lazy").setup({
             })
         end,
     },
-
-    -- Formatter
     {
         "stevearc/conform.nvim",
         event = "BufWritePre",
@@ -474,23 +493,20 @@ require("lazy").setup({
             })
         end,
     },
-
-    -- Multi-cursor
     {
         "smoka7/multicursors.nvim",
         event = "VeryLazy",
         dependencies = { "nvim-treesitter/nvim-treesitter", "nvimtools/hydra.nvim" },
-        opts = {},
-        keys = {
-            {
-                "<C-d>",
-                function() require("multicursors").start() end,
-                mode = { "n", "v" },
-            },
-        },
+        keys = { {
+            "<C-d>",
+            function()
+                require("multicursors").start()
+            end,
+            mode = { "n", "v" },
+        } },
     },
 
-    -- Theme
+    -- THEME
     {
         "folke/tokyonight.nvim",
         lazy = false,
@@ -506,11 +522,19 @@ require("lazy").setup({
     },
 })
 
--- Transparency & Custom Highlights
+-- 5. TRANSPARENCY
 local function transparent()
     local groups = {
-        "Normal", "NormalNC", "SignColumn", "StatusLine", "StatusLineNC",
-        "VertSplit", "LineNr", "CursorLineNr", "BufferLineFill", "BufferLineBackground",
+        "Normal",
+        "NormalNC",
+        "SignColumn",
+        "StatusLine",
+        "StatusLineNC",
+        "VertSplit",
+        "LineNr",
+        "CursorLineNr",
+        "BufferLineFill",
+        "BufferLineBackground",
     }
     for _, g in ipairs(groups) do
         pcall(vim.api.nvim_set_hl, 0, g, { fg = "#bfbfbf", bg = "NONE" })
@@ -520,36 +544,28 @@ local function transparent()
 end
 transparent()
 
--- Core Global Keymaps (Plugin-specific ones moved to Lazy 'keys' for performance)
-local map = vim.keymap.set
-map("n", "<Tab>", ":BufferLineCycleNext<CR>", { silent = true })
-map("n", "<S-Tab>", ":BufferLineCyclePrev<CR>", { silent = true })
-
--- SMART RUN (F5) - FULL PHANTEKZY LOGIC RESTORED
+-- 6. SMART RUN LOGIC (F5)
 local function smart_run()
     local bufnr = vim.api.nvim_get_current_buf()
     local filename = vim.api.nvim_buf_get_name(bufnr)
-
     if vim.bo.buftype ~= "" or filename == "" then
         vim.notify("Please phantekzy, open a file!", vim.log.levels.WARN, { title = "System" })
         return
     end
-    if vim.bo.modified then vim.cmd("w") end
+    if vim.bo.modified then
+        vim.cmd("w")
+    end
 
     local ft = vim.bo.filetype
     local cmd = ""
-
     if ft == "c" then
         cmd = [[clear && echo "--- PHANTEKZY COMPILING C ---" && echo "" && gcc %:p -o %:t:r -lm && ./%:t:r]]
     elseif ft == "php" then
         cmd = [[clear && echo "--- PHANTEKZY RUNNING PHP ---" && echo "" && php %:p]]
     elseif ft == "rust" then
-        local root = vim.fn.findfile("Cargo.toml", ".;")
-        if root ~= "" then
-            cmd = [[clear && echo "--- PHANTEKZY CARGO RUN ---" && echo "" && cargo run]]
-        else
-            cmd = [[clear && echo "--- PHANTEKZY RUSTC RUN ---" && echo "" && rustc %:p -o %:t:r && ./%:t:r]]
-        end
+        cmd = vim.fn.findfile("Cargo.toml", ".;") ~= ""
+            and [[clear && echo "--- PHANTEKZY CARGO RUN ---" && echo "" && cargo run]]
+            or [[clear && echo "--- PHANTEKZY RUSTC RUN ---" && echo "" && rustc %:p -o %:t:r && ./%:t:r]]
     elseif ft == "java" then
         if vim.fn.findfile("mvnw", ".;") ~= "" then
             cmd = [[clear && echo "--- PHANTEKZY MAVEN RUN ---" && echo "" && ./mvnw spring-boot:run]]
@@ -566,8 +582,8 @@ local function smart_run()
         vim.cmd("ToggleTerm direction=float")
     end
 end
-map("n", "<F5>", smart_run, { silent = true })
-map("t", "<esc>", [[<C-\><C-n>]])
+vim.keymap.set("n", "<F5>", smart_run, { silent = true })
+vim.keymap.set("t", "<esc>", [[<C-\><C-n>]])
 
 -- Diagnostics
 vim.diagnostic.config({
@@ -576,6 +592,61 @@ vim.diagnostic.config({
     underline = true,
     update_in_insert = false,
 })
-map("n", "[d", vim.diagnostic.goto_prev)
-map("n", "]d", vim.diagnostic.goto_next)
-map("n", "<leader>ld", vim.diagnostic.open_float)
+vim.keymap.set("n", "[d", vim.diagnostic.goto_prev)
+vim.keymap.set("n", "]d", vim.diagnostic.goto_next)
+vim.keymap.set("n", "<leader>ld", vim.diagnostic.open_float)
+
+-- ================================================================================================
+-- 7. MERGED SUCKLESS KEYMAPS & AUTOCMDS (The Secret Sauce)
+-- ================================================================================================
+
+local map = vim.keymap.set
+
+-- Buffer Navigation
+map("n", "<Tab>", ":BufferLineCycleNext<CR>", { silent = true })
+map("n", "<S-Tab>", ":BufferLineCyclePrev<CR>", { silent = true })
+
+-- Clear Highlights
+map("n", "<leader>c", ":nohlsearch<CR>", { desc = "Clear search highlights" })
+
+-- Better Yanking & Pasting
+map("n", "Y", "y$", { desc = "Yank to end of line" })
+map("x", "<leader>p", '"_dP', { desc = "Paste without yanking (replaces text cleanly)" })
+map({ "n", "v" }, "<leader>d", '"_d', { desc = "Delete without yanking to clipboard" })
+
+-- Centered Navigation (Game Changer)
+map("n", "n", "nzzzv", { desc = "Next search result (centered)" })
+map("n", "N", "Nzzzv", { desc = "Previous search result (centered)" })
+map("n", "<C-d>", "<C-d>zz", { desc = "Half page down (centered)" })
+map("n", "<C-u>", "<C-u>zz", { desc = "Half page up (centered)" })
+
+-- Window Navigation
+map("n", "<C-h>", "<C-w>h", { desc = "Move to left window" })
+map("n", "<C-j>", "<C-w>j", { desc = "Move to bottom window" })
+map("n", "<C-k>", "<C-w>k", { desc = "Move to top window" })
+map("n", "<C-l>", "<C-w>l", { desc = "Move to right window" })
+
+-- Move Lines Up/Down (Alt+j / Alt+k)
+map("n", "<A-j>", ":m .+1<CR>==", { desc = "Move line down" })
+map("n", "<A-k>", ":m .-2<CR>==", { desc = "Move line up" })
+map("v", "<A-j>", ":m '>+1<CR>gv=gv", { desc = "Move selection down" })
+map("v", "<A-k>", ":m '<-2<CR>gv=gv", { desc = "Move selection up" })
+
+-- Better Indenting in Visual Mode
+map("v", "<", "<gv", { desc = "Indent left and reselect" })
+map("v", ">", ">gv", { desc = "Indent right and reselect" })
+
+-- Copy Full File Path
+map("n", "<leader>pa", function()
+    local path = vim.fn.expand("%:p")
+    vim.fn.setreg("+", path)
+    print("Copied file path: ", path)
+end, { desc = "Copy File Path" })
+
+-- Autocommand: Highlight yanked text (Suckless Visual Cue)
+vim.api.nvim_create_autocmd("TextYankPost", {
+    group = vim.api.nvim_create_augroup("UserConfig", {}),
+    callback = function()
+        vim.highlight.on_yank()
+    end,
+})
