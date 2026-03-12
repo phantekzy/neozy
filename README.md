@@ -1,78 +1,89 @@
-# NEOZY: Advanced Engineering Development Environment
+# NEOZY: Advanced Engineering Development Environment (2026)
 
-NEOZY is a professional Neovim configuration engineered for the rigorous demands of Systems Programming and Web Architecture. It bridges the gap between heavy IDE functionality and low latency minimalist performance.
+NEOZY is a professional-grade Neovim configuration engineered for the rigorous demands of Systems Programming and Web Architecture. It bridges the gap between heavy-duty IDE functionality and low-latency, minimalist performance.
 
-## Architectural Philosophy
+---
 
-The core architecture is built upon three fundamental pillars:
+## I. Architectural Core & Performance
 
-* Low Latency Execution: Configuration parameters are strictly tuned to ensure rapid startup times and zero lag input processing.
-* Contextual Intelligence: A custom built execution engine identifies project structures (Cargo, Maven, Gradle) at runtime to provide isolated and appropriate build commands.
-* Ergonomic Precision: Motion and navigation logic are designed to maintain home row efficiency and minimize visual strain through centered cursor positioning.
+The core architecture is built upon three fundamental pillars designed for maximum developer throughput.
 
-## Technical Specifications & Performance Tuning
+### System Performance Tuning
+| Feature | Parameter | Technical Impact |
+| :--- | :--- | :--- |
+| **Startup Latency** | < 20ms | Optimized plugin loading via `lazy.nvim` and byte-compiled Lua. |
+| **Input Response** | `updatetime = 250ms` | Reduced delay for LSP diagnostics and Git gutter updates. |
+| **Visual Anchors** | `scrolloff = 10` | Cursor remains vertically centered for constant context. |
+| **Revision History** | `undofile = true` | Global persistent undo history stored at `~/.vim/undodir`. |
 
-### 1. Engine Core
-* Performance Tweak: The updatetime is calibrated to 250ms for rapid LSP diagnostics and Git integration without compromising CPU cycles.
-* Redraw Strategy: lazyredraw is utilized to optimize screen updates during complex macro execution.
-* Persistent State: Implements a global undo history across sessions stored in a dedicated directory to ensure long term revision persistence.
-* Visual Anchors: The scrolloff value of 10 ensures the cursor remains vertically centered, providing 10 lines of context above and below the active line at all times.
+---
 
-### 2. Intelligent Dashboard (Alpha NVIM)
-The startup environment provides automated telemetry and session management:
-* Session Resumption: Dynamically tracks and displays the five most recent files for instant access.
-* Telemetry Data: Real time calculation and display of loaded plugins and exact startup latency in milliseconds.
-* Automated Logic: Time sensitive system logic based on the local host clock.
+## II. Smart Run Engine (F5 Contextual Logic)
 
-### 3. Smart Run Engine (F5 Contextual Logic)
-The smart_run function is a specialized Lua implementation that provides language aware execution:
-* C: Automated compilation with gcc, linking the math library, and executing the output.
-* Rust: Intelligent detection of Cargo.toml. Executes cargo run if present; otherwise utilizes rustc for standalone files.
-* Java: Multi tier build tool detection for Maven and Gradle, with a fallback to standard JVM execution.
-* PHP: Direct script execution via the CLI runtime.
-* Process Isolation: All execution commands are dispatched to persistent floating terminal instances via ToggleTerm to preserve buffer cleanliness.
+The proprietary `smart_run` function provides language-aware execution by identifying project manifests at runtime.
 
-## Development Toolchain
+| Language | Detection Logic | Execution Pipeline |
+| :--- | :--- | :--- |
+| **C** | `.c` Extension | `gcc %:p -o %:t:r -lm && ./%:t:r` |
+| **Rust (Cargo)** | `Cargo.toml` | `cargo run` (Includes binary detection for `src/bin`) |
+| **Rust (Solo)** | `.rs` Extension | `rustc %:p -o %:t:r && ./%:t:r` |
+| **Java (Maven)** | `mvnw` | `./mvnw spring-boot:run` |
+| **Java (Gradle)** | `gradlew` | `./gradlew run` |
+| **PHP** | `.php` Extension | `php %:p` |
 
-### LSP & Tool Management
-The configuration utilizes a unified stack for automated binary management and language intelligence:
-* Systems Engineering: Full integration for clangd, rust_analyzer, and jdtls.
-* Web Architecture: Optimized support for typescript tools, intelephense, tailwindcss, and eslint.
-* Asynchronous Formatting: Conform.nvim manages BufWritePre hooks for prettierd, rustfmt, and google java format, ensuring non blocking saves.
+---
 
-### Syntax & UI Design
-* Transparency Engine: A custom Lua loop modifies UI highlights to enable terminal compositor transparency for Normal, SignColumn, and LineNr.
-* Lualine & Bufferline: Minimalist telemetry tracking using a dynamic mode_color table to shift UI indicators based on Vim mode. Bufferline is configured with separator_style set to none for a seamless interface.
+## III. Toolchain & LSP Manifest
 
-## Technical Keymap Manifest
+Managed via a unified stack for automated binary lifecycle management.
 
-### Navigation & Motion
-* Tab / Shift Tab: Buffer Cycle for instant navigation between open project files.
-* n / N: Search Next/Prev includes zzzv to lock search results to screen center.
-* Ctrl + d / Ctrl + u: Half page Jump with automatic centering to maintain visual focus.
-* Ctrl + h/j/k/l: Window Nav for seamless directional jumps between split panes.
+### Language Intelligence
+* **Systems:** `clangd` (C), `rust_analyzer` (Rust), `jdtls` (Java).
+* **Web:** `typescript-tools` (TS/JS), `intelephense` (PHP), `tailwindcss`, `eslint`.
+* **Completion:** `nvim-cmp` with `LuaSnip` integration for high-speed snippet expansion.
 
-### Advanced Editing
-* Leader + p: Visual Smart Paste replaces text using the black hole register to retain clipboard data.
-* Leader + d: Normal/Visual Silent Delete deletes without overwriting the current yank register.
-* Alt + j / Alt + k: Normal/Visual Line Bubbling moves lines or blocks with automated indentation logic.
-* Ctrl + d: Normal/Visual Multicursor triggers multicursors.nvim for parallel editing.
+### Automated Formatting (Conform.nvim)
+| Filetype | Formatter | Hook |
+| :--- | :--- | :--- |
+| JS / TS / Web | `prettierd` | On Save (Async) |
+| Rust | `rustfmt` | On Save (Async) |
+| Java | `google-java-format` | On Save (Async) |
+| C | `clang-format` | On Save (Async) |
 
-### System Commands
-* F5: Execute Smart Run Engine.
-* Ctrl + n: Toggle Neo tree File Explorer.
-* Leader + 1 through 4: Access Persistent Floating Terminals.
-* Leader + ca: Trigger LSP Code Actions.
-* Leader + ff: Telescope Fuzzy File Finder.
+---
 
-## Installation & Deployment
+## IV. Technical Keymap Manifest
 
-### Linux Environment
-git clone https://github.com/phantekzy/neozy.git ~/.config/nvim
+### Navigation & Ergonomics
+| Command | Mode | Action | Benefit |
+| :--- | :--- | :--- | :--- |
+| **Tab / S-Tab** | Normal | Buffer Cycle | Rapid context switching between project files. |
+| **n / N** | Normal | Search Next | Integrated `zzzv` for forced center-screen locking. |
+| **Ctrl + d / u** | Normal | Scroll | Half-page jump with automatic vertical centering. |
+| **Ctrl + h/j/k/l**| Normal | Window Nav | Seamless directional jumps between split panes. |
 
-### Windows Environment
-git clone https://github.com/phantekzy/neozy.git $HOME\AppData\Local\nvim
+### Surgical Editing
+| Command | Mode | Action | Benefit |
+| :--- | :--- | :--- | :--- |
+| **Leader + p** | Visual | Smart Paste | Replaces text using the black-hole register (`"_dP`). |
+| **Leader + d** | N / V | Silent Delete | Deletes without overwriting the yank register. |
+| **Alt + j / k** | N / V | Line Bubbling | Moves blocks with automated indentation logic. |
+| **Ctrl + d** | N / V | Multicursor | Parallel editing across multiple matching tokens. |
 
-* A Nerd Font is strictly required for the rendering of status line components and file system iconography.
+---
 
-Maintained by Maini Lotfi (Phantekzy)
+## V. UI & Transparency Engine
+
+NEOZY utilizes a custom transparency loop to support terminal blur and compositor effects.
+
+* **Transparency:** Automatically clears background highlights for `Normal`, `SignColumn`, and `LineNr`.
+* **Telemetry:** The Alpha dashboard calculates real-time plugin load counts and startup speed.
+* **Notifications:** `Noice.nvim` and `Nvim-notify` provide a professional, structured command palette.
+
+---
+
+## VI. Installation & Deployment
+
+### Systems Environment (Linux/Unix)
+```bash
+git clone [https://github.com/phantekzy/neozy.git](https://github.com/phantekzy/neozy.git) ~/.config/nvim
