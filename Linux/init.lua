@@ -102,11 +102,11 @@ require("lazy").setup({
 			local function get_greeting()
 				local hour = tonumber(os.date("%H"))
 				if hour < 12 then
-					return " 󰖙  Good Morning, Phantekzy "
+					return " 󰖙  Good Morning, Phantekzy "
 				elseif hour < 18 then
-					return " 󰖙  Good Afternoon, Phantekzy "
+					return " 󰖙  Good Afternoon, Phantekzy "
 				else
-					return " 󰖔  Good Evening, Phantekzy "
+					return " 󰖔  Good Evening, Phantekzy "
 				end
 			end
 
@@ -117,7 +117,7 @@ require("lazy").setup({
 						local name = vim.fn.fnamemodify(file, ":t")
 						table.insert(files, {
 							type = "button",
-							val = "󰈚  " .. name,
+							val = "󰈚  " .. name,
 							on_press = function()
 								vim.cmd("e " .. file)
 							end,
@@ -129,15 +129,15 @@ require("lazy").setup({
 			end
 
 			dashboard.section.header.val = {
-				[[        __                          __             __                          ]],
-				[[       /\ \                        /\ \__         /\ \                         ]],
-				[[ _____ \ \ \___       __       ___ \ \ ,_\     __ \ \ \/'\    ____     __  __  ]],
-				[[/\ '__`\\ \  _ `\   /'__`\   /' _ `\\ \ \/   /'__`\\ \ , <  /\_ ,`\ /\ \/\ \ ]],
-				[[\ \ \L\ \\ \ \ \ \ /\ \L\.\_ /\ \/\ \\ \ \_ /\  __/ \ \ \\`\\/_/  /_\ \ \_\ \]],
+				[[        __                          __             __                          ]],
+				[[       /\ \                        /\ \__         /\ \                         ]],
+				[[ _____ \ \ \___       __       ___ \ \ ,_\     __ \ \ \/'\    ____     __  __  ]],
+				[[/\ '__`\\ \  _ `\   /'__`\   /' _ `\\ \ \/   /'__`\\ \ , <  /\_ ,`\ /\ \/\ \ ]],
+				[[\ \ \L\ \\ \ \ \ \ /\ \L\.\_ /\ \/\ \\ \ \_ /\  __/ \ \ \\`\\/_/  /_\ \ \_\ \]],
 				[[ \ \ ,__/ \ \_\ \_\\ \__/.\_\\ \_\ \_\\ \__\\ \____\ \ \_\ \_\/\____\\/`____ \]],
-				[[  \ \ \/   \/_/\/_/ \/__/\/_/ \/_/\/_/ \/__/ \/____/  \/_/\/_/\/____/ `/___/> \]],
-				[[   \ \_\                                                                 /\___/]],
-				[[    \/_/                                                                 \/__/ ]],
+				[[  \ \ \/   \/_/\/_/ \/__/\/_/ \/_/\/_/ \/__/ \/____/  \/_/\/_/\/____/ `/___/> \]],
+				[[   \ \_\                                                                 /\___/]],
+				[[    \/_/                                                                 \/__/ ]],
 			}
 			dashboard.section.header.opts.hl = "Function"
 
@@ -150,33 +150,36 @@ require("lazy").setup({
 			end
 
 			dashboard.section.buttons.val = {
-				button("f", "󰍉  FIND PROJECT FILES", ":Telescope find_files <CR>"),
-				button("r", "󰋚  BROWSE ALL RECENT ", ":Telescope oldfiles <CR>"),
-				button("g", "󰱽  GLOBAL TEXT SEARCH", ":Telescope live_grep <CR>"),
-				button("c", "󰒓  CORE SYSTEM CONFIG", ":e $MYVIMRC <CR>"),
-				button("q", "󰩈  EXIT NEOTERMINAL  ", ":qa<CR>"),
+				button("f", "󰍉  FIND PROJECT FILES", ":Telescope find_files <CR>"),
+				button("r", "󰋚  BROWSE ALL RECENT ", ":Telescope oldfiles <CR>"),
+				button("g", "󰱽  GLOBAL TEXT SEARCH", ":Telescope live_grep <CR>"),
+				button("c", "󰒓  CORE SYSTEM CONFIG", ":e $MYVIMRC <CR>"),
+				button("q", "󰩈  EXIT NEOTERMINAL  ", ":qa<CR>"),
 			}
 
-			local stats = require("lazy").stats()
-			local ms = (math.floor(stats.startuptime * 100 + 0.5) / 100)
+			local function get_footer()
+				local stats = require("lazy").stats()
+				local ms = (math.floor(stats.startuptime * 100 + 0.5) / 100)
+				return {
+					" ",
+					"󰸗  " .. os.date("%A, %B %d") .. "  |  " .. get_greeting(),
+					"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+					"    NVIM v"
+						.. vim.version().major
+						.. "."
+						.. vim.version().minor
+						.. "  |  󰚀  PLUGINS: "
+						.. stats.loaded
+						.. "/"
+						.. stats.count
+						.. "  |  ⚡ "
+						.. ms
+						.. "ms",
+					"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+				}
+			end
 
-			dashboard.section.footer.val = {
-				" ",
-				"󰸗  " .. os.date("%A, %B %d") .. "  |  " .. get_greeting(),
-				"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
-				"    NVIM v"
-					.. vim.version().major
-					.. "."
-					.. vim.version().minor
-					.. "  |  󰚀  PLUGINS: "
-					.. stats.loaded
-					.. "/"
-					.. stats.count
-					.. "  |  ⚡ "
-					.. ms
-					.. "ms",
-				"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
-			}
+			dashboard.section.footer.val = get_footer()
 			dashboard.section.footer.opts.hl = "Comment"
 
 			dashboard.opts.layout = {
@@ -195,7 +198,16 @@ require("lazy").setup({
 				{ type = "padding", val = 2 },
 				dashboard.section.footer,
 			}
+
 			alpha.setup(dashboard.opts)
+
+			vim.api.nvim_create_autocmd("User", {
+				pattern = "LazyVimStarted",
+				callback = function()
+					dashboard.section.footer.val = get_footer()
+					pcall(vim.cmd, "AlphaRedraw")
+				end,
+			})
 		end,
 	},
 
